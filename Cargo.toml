@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 glium = "0.31.0"
+imgui = { git = "https://github.com/imgui-rs/imgui-rs" }
+imgui-glium-renderer = { git = "https://github.com/imgui-rs/imgui-rs" }
+imgui-winit-support = { git = "https://github.com/imgui-rs/imgui-rs" }
