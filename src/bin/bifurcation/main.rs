@@ -5,7 +5,8 @@ use glium::index::{NoIndices, PrimitiveType};
 use glium::uniforms::{UniformValue, Uniforms};
 use glium::{glutin, implement_vertex, Program, VertexBuffer};
 use glium::{Display, Surface};
-use imgui::{Condition, Context, FontConfig, FontGlyphRanges, FontSource, Ui};
+use imgui::sys::ImVec2;
+use imgui::{Condition, Context, FontConfig, FontGlyphRanges, FontSource, SliderFlags, Ui};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
 use std::path::Path;
@@ -20,41 +21,34 @@ implement_vertex!(Vertex, position);
 
 #[derive(Debug)]
 struct DrawParams {
-    x_min: f64,
-    x_max: f64,
-    y_min: f64,
-    y_max: f64,
-
-    width: f64,
-    height: f64,
+    pan_hor: f32,
+    pan_vert: f32,
+    zoom: f32,
+    c_range: [f32; 2],
 }
 
-impl DrawParams {
-    fn new(dims: (u32, u32)) -> DrawParams {
+impl Default for DrawParams {
+    fn default() -> DrawParams {
         DrawParams {
-            x_min: -2.0,
-            x_max: 1.0,
-            y_min: -1.0,
-            y_max: 1.0,
-            width: dims.0 as f64,
-            height: dims.1 as f64,
+            pan_vert: 0.0,
+            zoom: 0.5,
+            pan_hor: 1.0,
+            c_range: [-2.0, -1.0],
         }
     }
 }
 
 impl Uniforms for DrawParams {
     fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, mut f: F) {
-        f("xMin", UniformValue::Double(self.x_min));
-        f("xMax", UniformValue::Double(self.x_max));
-        f("yMin", UniformValue::Double(self.y_min));
-        f("yMax", UniformValue::Double(self.y_max));
-        f("width", UniformValue::Double(self.width));
-        f("height", UniformValue::Double(self.height));
+        f("pan_vert", UniformValue::Float(self.pan_vert));
+        f("zoom", UniformValue::Float(self.zoom));
+        f("pan_hor", UniformValue::Float(self.pan_hor));
+        f("c_range", UniformValue::Vec2(self.c_range));
     }
 }
 
 fn main() {
-    let title = "OK";
+    let title = "Bifurcation diagram";
 
     let event_loop = EventLoop::new();
     let context = glutin::ContextBuilder::new().with_vsync(true);
@@ -75,7 +69,7 @@ fn main() {
 
     let screen_width = display.get_framebuffer_dimensions().0;
 
-    let vertices = (0..screen_width)
+    let vertices: Vec<Vertex> = (0..screen_width)
         .into_iter()
         .map(|x| Vertex {
             position: [-1.0 + 2.0 * (x as f32) / (screen_width as f32), 0.0],
@@ -91,14 +85,11 @@ fn main() {
         include_str!("shaders/fragment.glsl"),
         Some(include_str!("shaders/geometry.glsl")),
     )
-        .unwrap();
+    .unwrap();
 
-    let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
+    let mut draw_params = DrawParams::default();
 
     let mut renderer = Renderer::init(&mut imgui, &display).expect("Failed to initialize renderer");
-
-    let mut value = 0;
-    let choices = ["test test this is 1", "test test this is 2"];
 
     let mut last_frame = Instant::now();
 
@@ -118,23 +109,20 @@ fn main() {
         Event::RedrawRequested(_) => {
             let ui = imgui.frame();
 
-            ui.window("Hello world")
-                .size([300.0, 110.0], Condition::FirstUseEver)
+            ui.window("Controls")
+                .size([300.0, 150.0], Condition::FirstUseEver)
+                .position([600.0, 50.0], Condition::FirstUseEver)
                 .build(|| {
-                    ui.text_wrapped("Hello world!");
-                    ui.text_wrapped("こんにちは世界！");
-                    if ui.button(choices[value]) {
-                        value += 1;
-                        value %= 2;
-                    }
+                    ui.slider("pan_hor", -2.0, 2.0, &mut draw_params.pan_hor);
+                    ui.slider("pan_vert", -2.0, 2.0, &mut draw_params.pan_vert);
+                    ui.slider("zoom", 0.001, 10.0, &mut draw_params.zoom);
+                    ui.slider_config("c min/max", -2.0 as f32, 2.0 as f32)
+                        .flags(SliderFlags::ALWAYS_CLAMP)
+                        .build_array(&mut draw_params.c_range);
 
-                    ui.button("This...is...imgui-rs!");
-                    ui.separator();
-                    let mouse_pos = ui.io().mouse_pos;
-                    ui.text(format!(
-                        "Mouse Position: ({:.1},{:.1})",
-                        mouse_pos[0], mouse_pos[1]
-                    ));
+                    if ui.button("Reset") {
+                        draw_params = DrawParams::default();
+                    }
                 });
 
             let gl_window = display.gl_window();
