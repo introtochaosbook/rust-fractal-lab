@@ -1,8 +1,8 @@
-fn fibo(i: i64) -> i64 {
-    match i {
+fn fibo(n: i64) -> i64 {
+    match n {
         0 => 0,
         1 => 1,
-        _ => fibo(i - 1) + fibo(i - 2)
+        _ => fibo(n - 1) + fibo(n - 2)
     }
 }
 
