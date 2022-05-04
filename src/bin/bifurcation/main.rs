@@ -69,12 +69,23 @@ fn main() {
 
     let screen_width = display.get_framebuffer_dimensions().0;
 
+    // Create n points along the x-axis, where n = screen_width
     let vertices: Vec<Vertex> = (0..screen_width)
         .into_iter()
         .map(|x| Vertex {
+            // The OpenGL coordinate system has all coordinates between
+            // -1.0 and 1.0, so we need to do some scaling.
             position: [-1.0 + 2.0 * (x as f32) / (screen_width as f32), 0.0],
         })
         .collect::<Vec<_>>();
+
+    // Also valid:
+    // let mut vertices = vec![];
+    // for x in 0..screen_width {
+    //     vertices.push(Vertex {
+    //         position: [-1.0 + 2.0 * (x as f32) / (screen_width as f32), 0.0],
+    //     })
+    // }
 
     let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
     let indices = NoIndices(PrimitiveType::Points);

@@ -6,10 +6,9 @@ use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
-use glium::{implement_vertex, Display, Surface, VertexBuffer, Program};
 use glium::index::{IndicesSource, NoIndices, PrimitiveType};
-use glium::uniforms::{Uniforms, UniformValue};
-
+use glium::uniforms::{UniformValue, Uniforms};
+use glium::{implement_vertex, Display, Program, Surface, VertexBuffer};
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -88,10 +87,13 @@ fn main() {
     let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
     let indices = NoIndices(PrimitiveType::TrianglesList);
 
-    let program = Program::from_source(&display,
-                                       include_str!("shaders/vertex.glsl"),
-                                       include_str!("shaders/fragment.glsl"),
-                                       None).unwrap();
+    let program = Program::from_source(
+        &display,
+        include_str!("shaders/vertex.glsl"),
+        include_str!("shaders/fragment.glsl"),
+        None,
+    )
+    .unwrap();
 
     let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
 
@@ -113,9 +115,15 @@ fn main() {
 
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
-        target.draw(&vertex_buffer, &indices, &program, &draw_params,
-                    &Default::default()).unwrap();
+        target
+            .draw(
+                &vertex_buffer,
+                &indices,
+                &program,
+                &draw_params,
+                &Default::default(),
+            )
+            .unwrap();
         target.finish().unwrap();
-
     });
 }
