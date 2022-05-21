@@ -61,8 +61,18 @@ fn main() {
 
     let program = Program::from_source(
         &display,
-        include_str!("shaders/vertex.glsl"),
-        include_str!("shaders/fragment.glsl"),
+        r##"#version 140
+in vec2 position;
+void main() {
+	gl_Position = vec4(position, 0.0, 1.0);
+}
+"##,
+        r##"#version 130
+out vec4 color;
+void main() {
+	color = vec4(0, 0, 0, 1);
+}
+"##,
         None,
     )
     .unwrap();
@@ -87,7 +97,7 @@ fn main() {
         }
 
         let mut target = display.draw();
-        target.clear_color(0.0, 0.0, 0.0, 1.0);
+        target.clear_color(255.0, 255.0, 255.0, 1.0);
         target
             .draw(
                 &vertex_buffer,
