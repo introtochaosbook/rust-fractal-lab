@@ -29,28 +29,31 @@ fn main() {
     let display = Display::new(wb, cb, &event_loop).unwrap();
 
     let mut rng = rand::thread_rng();
-
     let mut vertices = vec![];
+
+    // Initial starting point
     let mut x = rng.gen_range(-1.0..=1.0);
     let mut y = rng.gen_range(-1.0..=1.0);
 
     for i in 0..200000 {
+        // Generate random number in range [0, 2]
         match rng.gen_range(0..=2) {
-            0 => {
+            0 => { // rule 1
+                x = (-1.0 + x) / 2.0;
+                y = (-1.0 + y) / 2.0;
+            }
+            1 => { // rule 2
                 x = x / 2.0;
                 y = (1.0 + y) / 2.0;
             }
-            1 => {
+            2 => { // rule 3
                 x = (1.0 + x) / 2.0;
-                y = (-1.0 + y) / 2.0;
-            }
-            2 => {
-                x = (-1.0 + x) / 2.0;
                 y = (-1.0 + y) / 2.0;
             }
             _ => unreachable!(),
         }
 
+        // Skip first 1000 iterations
         if i > 1000 {
             vertices.push(Vertex { position: [x, y] })
         }

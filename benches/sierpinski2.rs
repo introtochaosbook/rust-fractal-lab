@@ -12,7 +12,6 @@ use bencher::{benchmark_group, benchmark_main};
 fn gen(b: &mut Bencher) {
     let mut rng = rand::thread_rng();
 
-
     let mut x = rng.gen_range(-1.0..=1.0);
     let mut y = rng.gen_range(-1.0..=1.0);
 
