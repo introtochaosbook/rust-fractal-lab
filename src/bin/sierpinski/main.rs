@@ -54,7 +54,7 @@ fn main() {
         }
 
         // Skip first 1000 iterations
-        if i > 1000 {
+        if i >= 1000 {
             vertices.push(Vertex { position: [x, y] })
         }
     }
