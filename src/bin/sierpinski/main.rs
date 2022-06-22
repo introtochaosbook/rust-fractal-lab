@@ -38,15 +38,18 @@ fn main() {
     for i in 0..200000 {
         // Generate random number in range [0, 2]
         match rng.gen_range(0..=2) {
-            0 => { // rule 1
+            0 => {
+                // rule 1
                 x = (-1.0 + x) / 2.0;
                 y = (-1.0 + y) / 2.0;
             }
-            1 => { // rule 2
+            1 => {
+                // rule 2
                 x = x / 2.0;
                 y = (1.0 + y) / 2.0;
             }
-            2 => { // rule 3
+            2 => {
+                // rule 3
                 x = (1.0 + x) / 2.0;
                 y = (-1.0 + y) / 2.0;
             }

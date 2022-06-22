@@ -37,9 +37,9 @@ fn main() {
     let mut x = 0.0;
     let mut y = 0.0;
 
-    let d =   array![[0.5, 0.0, 0.0, 0.5, 25.0, 1.0],
-                                [0.5, 0.0, 0.0, 0.5, 1.0, 50.0],
-                                [0.5, 0.0, 0.0, 0.5, 50.0, 50.0]];
+    let d = array![[0.5, 0.0, 0.0, 0.5, -0.5, -0.5],
+                              [0.5, 0.0, 0.0, 0.5, 0.0, 0.5],
+                              [0.5, 0.0, 0.0, 0.5, 0.5, -0.5]];
 
     for i in 0..300000 {
         let rule = rng.gen_range(0..=2);
@@ -47,9 +47,9 @@ fn main() {
         x = r[0] * x + r[1] * y + r[4];
         y = r[2] * x + r[3] * y + r[5];
 
-        // Skip first 1000 iterations
+        // Skip first few iterations
         if i >= 10 {
-            vertices.push(Vertex { position: [(x/-50.0) + 1.0, (y/-50.0) + 1.0] })
+            vertices.push(Vertex { position: [x, y] })
         }
     }
 
