@@ -1,4 +1,4 @@
-use crate::ControlFlow::{Wait};
+use crate::ControlFlow::Wait;
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
@@ -36,9 +36,11 @@ fn main() {
     let mut x = 0.0;
     let mut y = 0.0;
 
-    let d = array![[0.5, 0.0, 0.0, 0.5, -0.5, -0.5],
-                              [0.5, 0.0, 0.0, 0.5, 0.0, 0.5],
-                              [0.5, 0.0, 0.0, 0.5, 0.5, -0.5]];
+    let d = array![
+        [0.5, 0.0, 0.0, 0.5, -0.5, -0.5],
+        [0.5, 0.0, 0.0, 0.5, 0.0, 0.5],
+        [0.5, 0.0, 0.0, 0.5, 0.5, -0.5]
+    ];
 
     let p: Vec<f64> = vec![0.33, 0.33, 0.33];
     let dist = WeightedIndex::new(p).unwrap();
