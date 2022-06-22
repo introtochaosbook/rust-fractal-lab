@@ -1,16 +1,15 @@
-use crate::ControlFlow::{Wait, WaitUntil};
+use crate::ControlFlow::{Wait};
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
-use glium::index::{IndicesSource, NoIndices, PrimitiveType};
-use glium::uniforms::{UniformValue, Uniforms};
+use glium::index::{NoIndices, PrimitiveType};
+
 use glium::{implement_vertex, Display, Program, Surface, VertexBuffer};
 
 use ndarray::array;
-
-use rand::Rng;
+use rand::distributions::{Distribution, WeightedIndex};
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -41,9 +40,11 @@ fn main() {
                               [0.5, 0.0, 0.0, 0.5, 0.0, 0.5],
                               [0.5, 0.0, 0.0, 0.5, 0.5, -0.5]];
 
+    let p: Vec<f64> = vec![0.33, 0.33, 0.33];
+    let dist = WeightedIndex::new(p).unwrap();
+
     for i in 0..300000 {
-        let rule = rng.gen_range(0..=2);
-        let r = d.row(rule);
+        let r = d.row(dist.sample(&mut rng));
         x = r[0] * x + r[1] * y + r[4];
         y = r[2] * x + r[3] * y + r[5];
 
