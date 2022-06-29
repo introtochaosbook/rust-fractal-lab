@@ -8,7 +8,7 @@ use glium::index::{NoIndices, PrimitiveType};
 
 use glium::{implement_vertex, Display, Program, Surface, VertexBuffer};
 
-use ndarray::array;
+use ndarray::{array, s};
 use rand::distributions::{Distribution, WeightedIndex};
 
 #[derive(Copy, Clone)]
@@ -29,29 +29,27 @@ fn main() {
 
     let display = Display::new(wb, cb, &event_loop).unwrap();
 
-    let mut rng = rand::thread_rng();
-    let mut vertices = vec![];
-
-    // Initial starting point
-    let mut x = 0.0;
-    let mut y = 0.0;
-
     let d = array![
-        [0.5, 0.0, 0.0, 0.5, -0.5, -0.5],
-        [0.5, 0.0, 0.0, 0.5, 0.0, 0.5],
-        [0.5, 0.0, 0.0, 0.5, 0.5, -0.5]
+        [0.5, 0.0, 0.0, 0.5, -0.5, -0.5, 0.33],
+        [0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.33],
+        [0.5, 0.0, 0.0, 0.5, 0.5, -0.5, 0.33]
     ];
 
-    let p: Vec<f64> = vec![0.33, 0.33, 0.33];
-    let dist = WeightedIndex::new(p).unwrap();
+    let probs: Vec<f32> = d.slice(s![.., -1]).to_vec();
+    let dist = WeightedIndex::new(probs).unwrap();
+    let mut rng = rand::thread_rng();
 
-    for i in 0..300000 {
+    // Initial starting point
+    let mut x: f32 = 0.0;
+    let mut y: f32 = 0.0;
+
+    let mut vertices = vec![];
+    for i in 0..200000 {
         let r = d.row(dist.sample(&mut rng));
         x = r[0] * x + r[1] * y + r[4];
         y = r[2] * x + r[3] * y + r[5];
 
-        // Skip first few iterations
-        if i >= 10 {
+        if i >= 1000 { // Skip first 1000 iterations
             vertices.push(Vertex { position: [x, y] })
         }
     }
