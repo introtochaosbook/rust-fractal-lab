@@ -8,7 +8,7 @@ use glium::index::{NoIndices, PrimitiveType};
 
 use glium::{implement_vertex, Display, Program, Surface, VertexBuffer};
 
-use ndarray::{array, Array, Ix2, s};
+use ndarray::{array, s, Array, Ix2};
 use rand::distributions::{Distribution, WeightedIndex};
 
 #[derive(Copy, Clone)]
@@ -29,17 +29,16 @@ fn main() {
 
     let display = Display::new(wb, cb, &event_loop).unwrap();
 
-    let inc = 2.0/3.0;
-
+    let inc = 0.66;
     let d: Array<f64, Ix2> = array![
-        [1.0/3.0, 0.0, 0.0, 1.0/3.0, -inc, inc, 0.125],
-        [1.0/3.0, 0.0, 0.0, 1.0/3.0, 0.0, inc,  0.125],
-        [1.0/3.0, 0.0, 0.0, 1.0/3.0, inc, inc, 0.125],
-        [1.0/3.0, 0.0, 0.0, 1.0/3.0, -inc, 0.0, 0.125],
-        [1.0/3.0, 0.0, 0.0, 1.0/3.0, inc, 0.0, 0.125],
-        [1.0/3.0, 0.0, 0.0, 1.0/3.0, -inc, -inc, 0.125],
-        [1.0/3.0, 0.0, 0.0, 1.0/3.0, 0.0, -inc, 0.125],
-        [1.0/3.0, 0.0, 0.0, 1.0/3.0, inc, -inc, 0.125],
+        [0.33, 0.0, 0.0, 0.33, -inc, inc, 0.125],
+        [0.33, 0.0, 0.0, 0.33, 0.0, inc, 0.125],
+        [0.33, 0.0, 0.0, 0.33, inc, inc, 0.125],
+        [0.33, 0.0, 0.0, 0.33, -inc, 0.0, 0.125],
+        [0.33, 0.0, 0.0, 0.33, inc, 0.0, 0.125],
+        [0.33, 0.0, 0.0, 0.33, -inc, -inc, 0.125],
+        [0.33, 0.0, 0.0, 0.33, 0.0, -inc, 0.125],
+        [0.33, 0.0, 0.0, 0.33, inc, -inc, 0.125],
     ];
 
     let probs: Vec<f64> = d.slice(s![.., -1]).to_vec();
@@ -56,7 +55,8 @@ fn main() {
         x = r[0] * x + r[1] * y + r[4];
         y = r[2] * x + r[3] * y + r[5];
 
-        if i >= 1000 { // Skip first 1000 iterations
+        if i >= 1000 {
+            // Skip first 1000 iterations
             vertices.push(Vertex { position: [x, y] })
         }
     }
@@ -81,7 +81,7 @@ void main() {
 "##,
         None,
     )
-        .unwrap();
+    .unwrap();
 
     let uniforms = glium::uniforms::EmptyUniforms;
 

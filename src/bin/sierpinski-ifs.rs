@@ -49,7 +49,8 @@ fn main() {
         x = r[0] * x + r[1] * y + r[4];
         y = r[2] * x + r[3] * y + r[5];
 
-        if i >= 1000 { // Skip first 1000 iterations
+        if i >= 1000 {
+            // Skip first 1000 iterations
             vertices.push(Vertex { position: [x, y] })
         }
     }
