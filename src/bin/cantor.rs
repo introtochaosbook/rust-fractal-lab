@@ -1,32 +1,31 @@
-use crate::ControlFlow::{Wait, WaitUntil};
+use crate::ControlFlow::{Wait};
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
-use glium::index::{IndicesSource, NoIndices, PrimitiveType};
-use glium::uniforms::{UniformValue, Uniforms};
+use glium::index::{NoIndices, PrimitiveType};
+
 use glium::{implement_vertex, Display, Program, Surface, VertexBuffer, DrawParameters};
-use std::ops::Sub;
 
 #[derive(Copy, Clone)]
 struct Vertex {
-    position: [f64; 2],
+    position: [f32; 2],
 }
 
 implement_vertex!(Vertex, position);
 
 impl Vertex {
-    fn x(&self) -> f64 {
+    fn x(&self) -> f32 {
         self.position[0]
     }
 
-    fn y(&self) -> f64 {
+    fn y(&self) -> f32 {
         self.position[1]
     }
 }
 
-impl Into<Vertex> for [f64; 2] {
+impl Into<Vertex> for [f32; 2] {
     fn into(self) -> Vertex {
         Vertex { position: self }
     }
