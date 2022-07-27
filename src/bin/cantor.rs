@@ -1,3 +1,4 @@
+use std::iter::{self};
 use crate::ControlFlow::{Wait};
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{Event, WindowEvent};
@@ -31,41 +32,52 @@ impl Into<Vertex> for [f32; 2] {
     }
 }
 
-fn cantor<L, R>(vertices: &mut Vec<Vertex>, left: L, right: R, depth: u8)
+struct Line(Vertex, Vertex);
+
+impl Line {
+    fn into_vertices(self) -> impl Iterator<Item = Vertex> {
+        iter::once(self.0).chain(iter::once(self.1))
+    }
+}
+
+fn cantor<L, R>(lines: &mut Vec<Line>, left: L, right: R, depth: u8)
 where
     L: Into<Vertex>,
     R: Into<Vertex>,
 {
     let left = left.into();
     let right = right.into();
-    vertices.push(left);
-    vertices.push(right);
+    lines.push(Line(left, right));
 
-    // Keep track of recursion depth; too deep and we'll hang
-    if depth < 10 {
-        let y = left.y() - 0.05;
-        // Calculate third of line segment
-        let delta = (right.x() - left.x()) / 3.0;
-        // Draw left third
-        cantor(vertices, [left.x(), y], [left.x() + delta, y], depth + 1);
-        // Draw right third
-        cantor(vertices, [right.x() - delta, y], [right.x(), y], depth + 1);
+    // Keep track of recursion depth
+    if depth >= 10 {
+        return;
     }
+
+    let y = left.y() - 0.05;
+    // Calculate third of line segment
+    let delta = (right.x() - left.x()) / 3.0;
+    // Draw left third
+    cantor(lines, [left.x(), y], [left.x() + delta, y], depth + 1);
+    // Draw right third
+    cantor(lines, [right.x() - delta, y], [right.x(), y], depth + 1);
 }
 
 fn main() {
-    let mut event_loop = EventLoop::new();
+    let event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
-        .with_inner_size(LogicalSize::new(768.0, 768.0))
+        .with_inner_size(LogicalSize::new(768.0 as f32, 768.0 as f32))
         .with_title("Hello world");
 
     let cb = ContextBuilder::new();
 
     let display = Display::new(wb, cb, &event_loop).unwrap();
 
-    let mut vertices = vec![];
-    cantor(&mut vertices, [-1.0, 0.95], [1.0, 0.95], 0);
+    let mut lines = vec![];
+    cantor(&mut lines, [-1.0, 0.95], [1.0, 0.95], 0);
+
+    let vertices: Vec<_> = lines.into_iter().map(Line::into_vertices).flatten().collect();
 
     let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
     let indices = NoIndices(PrimitiveType::LinesList);
