@@ -6,6 +6,7 @@ use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 
+use glium::uniforms::{UniformValue, Uniforms};
 use glium::{implement_vertex, Display, Program, Surface, VertexBuffer};
 
 use ndarray::{array, s, Array, Ix2};
@@ -13,13 +14,30 @@ use rand::distributions::{Distribution, WeightedIndex};
 
 #[derive(Copy, Clone)]
 struct Vertex {
-    position: [f64; 2],
+    position: [f32; 2],
 }
 
 implement_vertex!(Vertex, position);
 
+#[derive(Debug)]
+struct MapParams {
+    x_min: f32,
+    x_max: f32,
+    y_min: f32,
+    y_max: f32,
+}
+
+impl Uniforms for MapParams {
+    fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, mut f: F) {
+        f("x_max", UniformValue::Float(self.x_max));
+        f("y_min", UniformValue::Float(self.y_min));
+        f("x_min", UniformValue::Float(self.x_min));
+        f("y_max", UniformValue::Float(self.y_max));
+    }
+}
+
 fn main() {
-    let mut event_loop = EventLoop::new();
+    let event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
         .with_inner_size(LogicalSize::new(768.0 as f32, 768.0 as f32))
@@ -29,30 +47,35 @@ fn main() {
 
     let display = Display::new(wb, cb, &event_loop).unwrap();
 
-    let inc = 0.66;
-    let d: Array<f64, Ix2> = array![
-        [0.33, 0.0, 0.0, 0.33, -inc, inc, 0.125],
-        [0.33, 0.0, 0.0, 0.33, 0.0, inc, 0.125],
-        [0.33, 0.0, 0.0, 0.33, inc, inc, 0.125],
-        [0.33, 0.0, 0.0, 0.33, -inc, 0.0, 0.125],
-        [0.33, 0.0, 0.0, 0.33, inc, 0.0, 0.125],
-        [0.33, 0.0, 0.0, 0.33, -inc, -inc, 0.125],
-        [0.33, 0.0, 0.0, 0.33, 0.0, -inc, 0.125],
-        [0.33, 0.0, 0.0, 0.33, inc, -inc, 0.125],
+    let d: Array<f32, Ix2> = array![
+        [0.0, 0.0, 0.0, 0.16, 0.0, 0.0, 0.01],
+        [0.85, 0.04, -0.04, 0.85, 0.0, 1.6, 0.85],
+        [0.2, -0.26, 0.23, 0.22, 0.0, 1.6, 0.07],
+        [-0.15, 0.28, 0.26, 0.24, 0.0, 0.44, 0.07],
     ];
 
-    let probs: Vec<f64> = d.slice(s![.., -1]).to_vec();
+    let probs: Vec<f32> = d.slice(s![.., -1]).to_vec();
     let dist = WeightedIndex::new(probs).unwrap();
     let mut rng = rand::thread_rng();
 
     // Initial starting point
-    let mut x: f64 = 0.0;
-    let mut y: f64 = 0.0;
+    let mut x: f32 = 0.0;
+    let mut y: f32 = 0.0;
+
+    let mut x_min: f32 = 0.0;
+    let mut x_max: f32 = 0.0;
+    let mut y_min: f32 = 0.0;
+    let mut y_max: f32 = 0.0;
 
     let mut vertices = vec![];
     for i in 0..200000 {
         let r = d.row(dist.sample(&mut rng));
         x = r[0] * x + r[1] * y + r[4];
+        x_min = x_min.min(x);
+        x_max = x_max.max(x);
+        y_min = y_min.min(y);
+        y_max = y_max.max(y);
+
         y = r[2] * x + r[3] * y + r[5];
 
         if i >= 1000 {
@@ -67,9 +90,18 @@ fn main() {
     let program = Program::from_source(
         &display,
         r##"#version 140
+uniform float x_min;
+uniform float x_max;
+uniform float y_min;
+uniform float y_max;
+
+float map(float x, float in_min, float in_max, float out_min, float out_max) {
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 in vec2 position;
 void main() {
-	gl_Position = vec4(position, 0.0, 1.0);
+	gl_Position = vec4(map(position.x, x_min, x_max, -1.0, 1.0), map(position.y, y_min, y_max, -1.0, 1.0), 0.0, 1.0);
 }
 "##,
         r##"#version 130
@@ -83,12 +115,14 @@ void main() {
     )
     .unwrap();
 
-    let uniforms = glium::uniforms::EmptyUniforms;
+    let uniforms = MapParams {
+        y_max,
+        y_min,
+        x_min,
+        x_max,
+    };
 
     event_loop.run(move |ev, _, control_flow| {
-        let next_frame_time =
-            std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
-
         *control_flow = Wait;
 
         match ev {

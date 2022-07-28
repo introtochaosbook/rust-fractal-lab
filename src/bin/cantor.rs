@@ -1,13 +1,13 @@
-use std::iter::{self};
-use crate::ControlFlow::{Wait};
+use crate::ControlFlow::Wait;
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
+use std::iter::{self};
 
-use glium::{implement_vertex, Display, Program, Surface, VertexBuffer, DrawParameters};
+use glium::{implement_vertex, Display, DrawParameters, Program, Surface, VertexBuffer};
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -50,10 +50,11 @@ where
     lines.push(Line(left, right));
 
     // Keep track of recursion depth
-    if depth >= 10 {
+    if depth >= 6 {
         return;
     }
 
+    // Shift subsequent lines down a bit
     let y = left.y() - 0.05;
     // Calculate third of line segment
     let delta = (right.x() - left.x()) / 3.0;
@@ -77,7 +78,11 @@ fn main() {
     let mut lines = vec![];
     cantor(&mut lines, [-1.0, 0.95], [1.0, 0.95], 0);
 
-    let vertices: Vec<_> = lines.into_iter().map(Line::into_vertices).flatten().collect();
+    let vertices: Vec<_> = lines
+        .into_iter()
+        .map(Line::into_vertices)
+        .flatten()
+        .collect();
 
     let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
     let indices = NoIndices(PrimitiveType::LinesList);
@@ -124,13 +129,7 @@ void main() {
         let mut params = DrawParameters::default();
         params.line_width = Some(4.0);
         target
-            .draw(
-                &vertex_buffer,
-                &indices,
-                &program,
-                &uniforms,
-                &params,
-            )
+            .draw(&vertex_buffer, &indices, &program, &uniforms, &params)
             .unwrap();
         target.finish().unwrap();
     });
