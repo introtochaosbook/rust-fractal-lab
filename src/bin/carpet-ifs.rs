@@ -7,17 +7,11 @@ use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 
 use glium::uniforms::{UniformValue, Uniforms};
-use glium::{implement_vertex, Display, Program, Surface, VertexBuffer};
+use glium::{Display, Program, Surface, VertexBuffer};
 
+use rust_fractal_lab::vertex::Vertex;
 use ndarray::{array, s, Array, Ix2};
 use rand::distributions::{Distribution, WeightedIndex};
-
-#[derive(Copy, Clone)]
-struct Vertex {
-    position: [f32; 2],
-}
-
-implement_vertex!(Vertex, position);
 
 #[derive(Debug)]
 struct MapParams {

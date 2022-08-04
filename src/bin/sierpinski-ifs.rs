@@ -6,17 +6,11 @@ use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 
-use glium::{implement_vertex, Display, Program, Surface, VertexBuffer};
+use glium::{Display, Program, Surface, VertexBuffer};
 
+use rust_fractal_lab::vertex::Vertex;
 use ndarray::{array, s};
 use rand::distributions::{Distribution, WeightedIndex};
-
-#[derive(Copy, Clone)]
-struct Vertex {
-    position: [f32; 2],
-}
-
-implement_vertex!(Vertex, position);
 
 fn main() {
     let mut event_loop = EventLoop::new();

@@ -7,30 +7,8 @@ use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 use std::iter::{self};
 
-use glium::{implement_vertex, Display, DrawParameters, Program, Surface, VertexBuffer};
-
-#[derive(Copy, Clone)]
-struct Vertex {
-    position: [f32; 2],
-}
-
-implement_vertex!(Vertex, position);
-
-impl Vertex {
-    fn x(&self) -> f32 {
-        self.position[0]
-    }
-
-    fn y(&self) -> f32 {
-        self.position[1]
-    }
-}
-
-impl Into<Vertex> for [f32; 2] {
-    fn into(self) -> Vertex {
-        Vertex { position: self }
-    }
-}
+use glium::{Display, DrawParameters, Program, Surface, VertexBuffer};
+use rust_fractal_lab::vertex::Vertex;
 
 struct Line(Vertex, Vertex);
 

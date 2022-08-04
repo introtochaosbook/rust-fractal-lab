@@ -3,21 +3,13 @@ use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 use glium::uniforms::{UniformValue, Uniforms};
-use glium::{glutin, implement_vertex, Program, VertexBuffer};
+use glium::{glutin, Program, VertexBuffer};
 use glium::{Display, Surface};
-use imgui::sys::ImVec2;
-use imgui::{Condition, Context, FontConfig, FontGlyphRanges, FontSource, SliderFlags, Ui};
+use imgui::{Condition, Context, SliderFlags, Ui};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
-use std::path::Path;
 use std::time::Instant;
-
-#[derive(Copy, Clone)]
-struct Vertex {
-    position: [f32; 2],
-}
-
-implement_vertex!(Vertex, position);
+use rust_fractal_lab::vertex::Vertex;
 
 #[derive(Debug)]
 struct DrawParams {

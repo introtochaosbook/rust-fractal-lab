@@ -1,21 +1,14 @@
 // Initial code based on https://github.com/remexre/mandelbrot-rust-gl
 
-use crate::ControlFlow::WaitUntil;
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
-use glium::index::{IndicesSource, NoIndices, PrimitiveType};
+use glium::index::{NoIndices, PrimitiveType};
 use glium::uniforms::{UniformValue, Uniforms};
-use glium::{implement_vertex, Display, Program, Surface, VertexBuffer};
-
-#[derive(Copy, Clone)]
-struct Vertex {
-    position: [f32; 2],
-}
-
-implement_vertex!(Vertex, position);
+use glium::{Display, Program, Surface, VertexBuffer};
+use rust_fractal_lab::vertex::Vertex;
 
 #[derive(Debug)]
 struct DrawParams {

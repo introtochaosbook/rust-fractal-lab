@@ -14,12 +14,12 @@ use rand::distributions::{Distribution, WeightedIndex};
 use rand::Rng;
 
 #[derive(Copy, Clone)]
-struct Vertex {
+struct ColoredVertex {
     position: [f32; 2],
     color: [f32; 4],
 }
 
-implement_vertex!(Vertex, position, color);
+implement_vertex!(ColoredVertex, position, color);
 
 #[derive(Debug)]
 struct MapParams {
@@ -92,7 +92,7 @@ pub fn ifs_main(d: Array<f32, Ix2>) {
 
             if i >= 10 {
                 // Skip first few iterations
-                vertices.push(Vertex { position: [scaled_x, scaled_y], color })
+                vertices.push(ColoredVertex { position: [scaled_x, scaled_y], color })
             }
         }
     }

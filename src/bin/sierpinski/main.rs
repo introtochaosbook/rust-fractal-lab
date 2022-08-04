@@ -1,21 +1,14 @@
-use crate::ControlFlow::{Wait, WaitUntil};
+use crate::ControlFlow::{Wait};
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
-use glium::index::{IndicesSource, NoIndices, PrimitiveType};
-use glium::uniforms::{UniformValue, Uniforms};
-use glium::{implement_vertex, Display, Program, Surface, VertexBuffer};
+use glium::index::{NoIndices, PrimitiveType};
+use glium::{Display, Program, Surface, VertexBuffer};
+use rust_fractal_lab::vertex::Vertex;
 
 use rand::Rng;
-
-#[derive(Copy, Clone)]
-struct Vertex {
-    position: [f32; 2],
-}
-
-implement_vertex!(Vertex, position);
 
 fn main() {
     let mut event_loop = EventLoop::new();
