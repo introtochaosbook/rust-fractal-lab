@@ -5,9 +5,9 @@ use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 
+use glium::glutin::event_loop::ControlFlow::Wait;
 use glium::uniforms::{UniformValue, Uniforms};
 use glium::{implement_vertex, Display, Program, Surface, VertexBuffer};
-use glium::glutin::event_loop::ControlFlow::Wait;
 
 use ndarray::{array, s, Array, Ix2};
 use rand::distributions::{Distribution, WeightedIndex};
@@ -64,16 +64,16 @@ pub fn ifs_main(d: Array<f32, Ix2>) {
 
     let mut vertices = vec![];
     for _ in 0..150 {
-        let shift_x = rng.gen_range(-10.0..10.0);
-        let shift_y = rng.gen_range(-10.0..10.0);
-        let scale = rng.gen_range(0.1..2.0);
+        let shift_x = rng.gen_range(-0.5..0.5);
+        let shift_y = rng.gen_range(-0.5..0.5);
+        let scale = rng.gen_range(1.0..10.0);
 
         let color = {
             match rng.gen_range(0..=9) {
-                0..=7 => [0.0, 100.0/255.0, 0.0, 1.0],
-                8 => [204.0/255.0, 244.0/255.0, 0.0, 1.0],
-                9 => [165.0/255.0, 42.0/255.0, 42.0/255.0, 1.0],
-                _ => unreachable!()
+                0..=7 => [0.0, 100.0 / 255.0, 0.0, 1.0],
+                8 => [204.0 / 255.0, 244.0 / 255.0, 0.0, 1.0],
+                9 => [165.0 / 255.0, 42.0 / 255.0, 42.0 / 255.0, 1.0],
+                _ => unreachable!(),
             }
         };
 
@@ -92,7 +92,10 @@ pub fn ifs_main(d: Array<f32, Ix2>) {
 
             if i >= 10 {
                 // Skip first few iterations
-                vertices.push(ColoredVertex { position: [scaled_x, scaled_y], color })
+                vertices.push(ColoredVertex {
+                    position: [scaled_x, scaled_y],
+                    color,
+                })
             }
         }
     }

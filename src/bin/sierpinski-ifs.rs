@@ -8,9 +8,9 @@ use glium::index::{NoIndices, PrimitiveType};
 
 use glium::{Display, Program, Surface, VertexBuffer};
 
-use rust_fractal_lab::vertex::Vertex;
 use ndarray::{array, s};
 use rand::distributions::{Distribution, WeightedIndex};
+use rust_fractal_lab::vertex::Vertex;
 
 fn main() {
     let mut event_loop = EventLoop::new();

@@ -1,4 +1,4 @@
-use crate::ControlFlow::{Wait};
+use crate::ControlFlow::Wait;
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
