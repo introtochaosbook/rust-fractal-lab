@@ -13,7 +13,7 @@ uniform double width;
 
 uniform uint max_colors;
 
-uniform Block {
+layout(std140) uniform Block {
 	float colors_r[256];
 	float colors_g[256];
 	float colors_b[256];
