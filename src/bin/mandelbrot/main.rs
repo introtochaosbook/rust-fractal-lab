@@ -30,9 +30,8 @@ impl UniformBlock2 {
 
 implement_uniform_block!(UniformBlock2, colors_r, colors_g, colors_b);
 
-
 fn main() {
-    let mut event_loop = EventLoop::new();
+    let event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
         .with_inner_size(LogicalSize::new(1024.0, 768.0))
@@ -74,13 +73,8 @@ fn main() {
     )
     .unwrap();
 
-    let dims = display.get_framebuffer_dimensions();
-
     event_loop.run(move |ev, _, control_flow| {
-        let next_frame_time =
-            std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
-
-        *control_flow = ControlFlow::WaitUntil(next_frame_time);
+        *control_flow = ControlFlow::Wait;
         match ev {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::CloseRequested => {
@@ -90,11 +84,19 @@ fn main() {
                 WindowEvent::MouseInput { .. } => return,
                 _ => return,
             },
+            Event::DeviceEvent {
+                event: DeviceEvent::MouseMotion { .. } | DeviceEvent::Motion { .. },
+                ..
+            } => return,
             _ => (),
         }
 
-        let gradient = colorous::TURBO;
-        let max_colors: usize = 80;
+        let dims = display.get_framebuffer_dimensions();
+
+        eprintln!("{:?}", ev);
+
+        let gradient = colorous::INFERNO;
+        let max_colors: usize = 30;
         let mut colors_r: [f32; 256] = [0.0; 256];
         let mut colors_g: [f32; 256] = [0.0; 256];
         let mut colors_b: [f32; 256] = [0.0; 256];
@@ -105,10 +107,8 @@ fn main() {
             colors_b[i] = (color.b as f32) / 255.0;
         }
 
-        let buffer = UniformBuffer::new(
-            &display,
-            UniformBlock2::new(colors_r, colors_g, colors_b),
-        ).unwrap();
+        let buffer =
+            UniformBuffer::new(&display, UniformBlock2::new(colors_r, colors_g, colors_b)).unwrap();
 
         let uniforms = uniform! {
             Block: &buffer,
