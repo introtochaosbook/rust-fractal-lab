@@ -9,9 +9,9 @@ use glium::index::{NoIndices, PrimitiveType};
 use glium::uniforms::{UniformValue, Uniforms};
 use glium::{Display, Program, Surface, VertexBuffer};
 
-use rust_fractal_lab::vertex::Vertex;
 use ndarray::{array, s, Array, Ix2};
 use rand::distributions::{Distribution, WeightedIndex};
+use rust_fractal_lab::vertex::Vertex;
 
 #[derive(Debug)]
 struct MapParams {

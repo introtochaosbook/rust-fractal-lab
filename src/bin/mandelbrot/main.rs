@@ -1,15 +1,15 @@
 // Initial code based on https://github.com/remexre/mandelbrot-rust-gl
 
+use colorous;
 use glium::glutin::dpi::LogicalSize;
-use glium::glutin::event::{Event, WindowEvent};
+use glium::glutin::event::{DeviceEvent, Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
-use glium::uniforms::{UniformValue, Uniforms, UniformBuffer, UniformsStorage};
-use glium::{Display, implement_uniform_block, Program, Surface, uniform, VertexBuffer};
+use glium::uniforms::{UniformBuffer, UniformValue, Uniforms, UniformsStorage};
+use glium::{implement_uniform_block, uniform, Display, Program, Surface, VertexBuffer};
 use rust_fractal_lab::vertex::Vertex;
-use colorous;
 
 #[derive(Copy, Clone)]
 struct UniformBlock2 {

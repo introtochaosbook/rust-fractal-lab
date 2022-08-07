@@ -8,8 +8,8 @@ use glium::{Display, Surface};
 use imgui::{Condition, Context, SliderFlags, Ui};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
-use std::time::Instant;
 use rust_fractal_lab::vertex::Vertex;
+use std::time::Instant;
 
 #[derive(Debug)]
 struct DrawParams {
