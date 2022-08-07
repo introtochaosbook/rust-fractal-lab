@@ -14,8 +14,13 @@ use rust_fractal_lab::vertex::Vertex;
 #[derive(Copy, Clone)]
 struct UniformBlock2 {
     colors_r: [f32; 256],
+    _padding: [f32; 512],
+    _padding2: [f32; 256],
     colors_g: [f32; 256],
+    _padding3: [f32; 512],
+    _padding4: [f32; 256],
     colors_b: [f32; 256],
+
 }
 
 impl UniformBlock2 {
@@ -24,6 +29,10 @@ impl UniformBlock2 {
             colors_r,
             colors_g,
             colors_b,
+            _padding: [0.0; 512],
+            _padding2: [0.0; 256],
+            _padding3: [0.0; 512],
+            _padding4: [0.0; 256],
         }
     }
 }
@@ -93,10 +102,8 @@ fn main() {
 
         let dims = display.get_framebuffer_dimensions();
 
-        eprintln!("{:?}", ev);
-
         let gradient = colorous::INFERNO;
-        let max_colors: usize = 30;
+        let max_colors: usize = 256;
         let mut colors_r: [f32; 256] = [0.0; 256];
         let mut colors_g: [f32; 256] = [0.0; 256];
         let mut colors_b: [f32; 256] = [0.0; 256];

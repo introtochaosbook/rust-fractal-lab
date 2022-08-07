@@ -1,4 +1,4 @@
-#version 130
+#version 140
 #extension GL_ARB_gpu_shader_fp64 : require
 
 out vec4 color;
@@ -20,7 +20,7 @@ uniform Block {
 };
 
 dvec2 complex_square(dvec2 z) {
-	return dvec2(z.x * z.x - z.y * z.y, 2 * z.x * z.y);
+	return dvec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y);
 }
 
 void main() {
@@ -28,7 +28,7 @@ void main() {
 		xMin + (xMax - xMin) * (gl_FragCoord.x / width),
 		yMax - (yMax - yMin) * (gl_FragCoord.y / height));
 
-	int i = 0;
+	uint i = 0u;
 	double mag = 0;
 	double escape = 4.0;
 	dvec2 z = dvec2(0, 0);
