@@ -11,7 +11,7 @@ use rust_fractal_lab::vertex::Vertex;
 use rand::Rng;
 
 fn main() {
-    let mut event_loop = EventLoop::new();
+    let event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
         .with_inner_size(LogicalSize::new(768.0, 768.0))
@@ -38,7 +38,7 @@ fn main() {
             }
             1 => {
                 // rule 2
-                x = x / 2.0;
+                x /= 2.0;
                 y = (1.0 + y) / 2.0;
             }
             2 => {
@@ -79,7 +79,7 @@ void main() {
     let uniforms = glium::uniforms::EmptyUniforms;
 
     event_loop.run(move |ev, _, control_flow| {
-        let next_frame_time =
+        let _next_frame_time =
             std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
 
         *control_flow = Wait;

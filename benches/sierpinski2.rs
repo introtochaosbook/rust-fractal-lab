@@ -1,5 +1,5 @@
 use rand::Rng;
-use rand::*;
+
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -21,7 +21,7 @@ fn gen(b: &mut Bencher) {
         for i in 0..2000000 {
             match rng.gen_range(0..=2) {
                 0 => {
-                    x = x / 2.0;
+                    x /= 2.0;
                     y = (1.0 + y) / 2.0;
                 }
                 1 => {

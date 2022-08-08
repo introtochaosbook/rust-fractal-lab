@@ -46,7 +46,7 @@ fn main() {
     let event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
-        .with_inner_size(LogicalSize::new(768.0 as f32, 768.0 as f32))
+        .with_inner_size(LogicalSize::new(768.0_f32, 768.0_f32))
         .with_title("Hello world");
 
     let cb = ContextBuilder::new();
@@ -58,8 +58,7 @@ fn main() {
 
     let vertices: Vec<_> = lines
         .into_iter()
-        .map(Line::into_vertices)
-        .flatten()
+        .flat_map(Line::into_vertices)
         .collect();
 
     let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();

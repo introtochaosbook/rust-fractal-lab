@@ -9,7 +9,7 @@ use glium::glutin::event_loop::ControlFlow::Wait;
 use glium::uniforms::{UniformValue, Uniforms};
 use glium::{implement_vertex, Display, Program, Surface, VertexBuffer};
 
-use ndarray::{array, s, Array, Ix2};
+use ndarray::{s, Array, Ix2};
 use rand::distributions::{Distribution, WeightedIndex};
 use rand::Rng;
 
@@ -84,7 +84,7 @@ impl IfsProgram {
         let event_loop = EventLoop::new();
 
         let wb = WindowBuilder::new()
-            .with_inner_size(LogicalSize::new(768.0 as f32, 768.0 as f32))
+            .with_inner_size(LogicalSize::new(768.0_f32, 768.0_f32))
             .with_title("Hello world");
 
         let cb = ContextBuilder::new();

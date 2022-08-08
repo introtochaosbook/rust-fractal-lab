@@ -5,7 +5,7 @@ use glium::index::{NoIndices, PrimitiveType};
 use glium::uniforms::{UniformValue, Uniforms};
 use glium::{glutin, Program, VertexBuffer};
 use glium::{Display, Surface};
-use imgui::{Condition, Context, SliderFlags, Ui};
+use imgui::{Condition, Context, SliderFlags};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
 use rust_fractal_lab::vertex::Vertex;
@@ -124,7 +124,7 @@ void main() {
                     ui.slider("pan_hor", -2.0, 2.0, &mut draw_params.pan_hor);
                     ui.slider("pan_vert", -2.0, 2.0, &mut draw_params.pan_vert);
                     ui.slider("zoom", 0.001, 10.0, &mut draw_params.zoom);
-                    ui.slider_config("c min/max", -2.0 as f32, 2.0 as f32)
+                    ui.slider_config("c min/max", -2.0_f32, 2.0_f32)
                         .flags(SliderFlags::ALWAYS_CLAMP)
                         .build_array(&mut draw_params.c_range);
 
