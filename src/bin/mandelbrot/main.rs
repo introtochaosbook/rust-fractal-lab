@@ -20,7 +20,6 @@ struct UniformBlock2 {
     _padding3: [f32; 512],
     _padding4: [f32; 256],
     colors_b: [f32; 256],
-
 }
 
 impl UniformBlock2 {
@@ -76,7 +75,12 @@ fn main() {
 
     let program = Program::from_source(
         &display,
-        include_str!("shaders/vertex.glsl"),
+        r##"#version 140
+in vec2 position;
+void main() {
+	gl_Position = vec4(position, 0.0, 1.0);
+}
+"##,
         include_str!("shaders/fragment.glsl"),
         None,
     )
