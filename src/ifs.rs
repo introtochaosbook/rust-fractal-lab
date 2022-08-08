@@ -21,7 +21,7 @@ struct ColoredVertex {
 
 implement_vertex!(ColoredVertex, position, color);
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 struct MapParams {
     x_min: f32,
     x_max: f32,
@@ -29,83 +29,59 @@ struct MapParams {
     y_max: f32,
 }
 
-impl Uniforms for MapParams {
-    fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, mut f: F) {
-        f("x_max", UniformValue::Float(self.x_max));
-        f("y_min", UniformValue::Float(self.y_min));
-        f("x_min", UniformValue::Float(self.x_min));
-        f("y_max", UniformValue::Float(self.y_max));
-    }
+#[derive(Default)]
+pub struct IfsProgram {
+    uniforms: MapParams,
+    vertices: Vec<ColoredVertex>,
 }
 
-pub fn ifs_main(d: Array<f32, Ix2>) {
-    let event_loop = EventLoop::new();
+impl IfsProgram {
+    pub fn sample(&mut self, d: Array<f32, Ix2>, color: [f32; 4], iters: usize) {
+        let probs: Vec<f32> = d.slice(s![.., -1]).to_vec();
+        let dist = WeightedIndex::new(probs).unwrap();
+        let mut rng = rand::thread_rng();
 
-    let wb = WindowBuilder::new()
-        .with_inner_size(LogicalSize::new(768.0 as f32, 768.0 as f32))
-        .with_title("Hello world");
+        // Initial starting point
+        let mut x: f32 = 0.0;
+        let mut y: f32 = 0.0;
 
-    let cb = ContextBuilder::new();
-
-    let display = Display::new(wb, cb, &event_loop).unwrap();
-
-    let probs: Vec<f32> = d.slice(s![.., -1]).to_vec();
-    let dist = WeightedIndex::new(probs).unwrap();
-    let mut rng = rand::thread_rng();
-
-    // Initial starting point
-    let mut x: f32 = 0.0;
-    let mut y: f32 = 0.0;
-
-    let mut x_min: f32 = 0.0;
-    let mut x_max: f32 = 0.0;
-    let mut y_min: f32 = 0.0;
-    let mut y_max: f32 = 0.0;
-
-    let mut vertices = vec![];
-    for _ in 0..150 {
-        let shift_x = rng.gen_range(-0.5..0.5);
-        let shift_y = rng.gen_range(-0.5..0.5);
-        let scale = rng.gen_range(1.0..10.0);
-
-        let color = {
-            match rng.gen_range(0..=9) {
-                0..=7 => [0.0, 100.0 / 255.0, 0.0, 1.0],
-                8 => [204.0 / 255.0, 244.0 / 255.0, 0.0, 1.0],
-                9 => [165.0 / 255.0, 42.0 / 255.0, 42.0 / 255.0, 1.0],
-                _ => unreachable!(),
-            }
-        };
-
-        for i in 0..1000 {
+        for i in 0..iters {
             let r = d.row(dist.sample(&mut rng));
             x = r[0] * x + r[1] * y + r[4];
             y = r[2] * x + r[3] * y + r[5];
 
-            let scaled_x = (x + shift_x) * scale;
-            let scaled_y = (y + shift_y) * scale;
-
-            x_min = x_min.min(scaled_x);
-            x_max = x_max.max(scaled_x);
-            y_min = y_min.min(scaled_y);
-            y_max = y_max.max(scaled_y);
+            self.uniforms.x_min = self.uniforms.x_min.min(x);
+            self.uniforms.x_max = self.uniforms.x_max.max(x);
+            self.uniforms.y_min = self.uniforms.y_min.min(y);
+            self.uniforms.y_max = self.uniforms.y_max.max(y);
 
             if i >= 10 {
                 // Skip first few iterations
-                vertices.push(ColoredVertex {
-                    position: [scaled_x, scaled_y],
+                self.vertices.push(ColoredVertex {
+                    position: [x, y],
                     color,
                 })
             }
         }
     }
 
-    let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
-    let indices = NoIndices(PrimitiveType::Points);
+    pub fn run(&self) {
+        let event_loop = EventLoop::new();
 
-    let program = Program::from_source(
-        &display,
-        r##"#version 140
+        let wb = WindowBuilder::new()
+            .with_inner_size(LogicalSize::new(768.0 as f32, 768.0 as f32))
+            .with_title("Hello world");
+
+        let cb = ContextBuilder::new();
+
+        let display = Display::new(wb, cb, &event_loop).unwrap();
+
+        let vertex_buffer = VertexBuffer::new(&display, &self.vertices).unwrap();
+        let indices = NoIndices(PrimitiveType::Points);
+
+        let program = Program::from_source(
+            &display,
+            r##"#version 140
 uniform float x_min;
 uniform float x_max;
 uniform float y_min;
@@ -124,49 +100,53 @@ void main() {
 	v_color = color;
 }
 "##,
-        r##"#version 130
+            r##"#version 130
 in vec4 v_color;
 out vec4 color;
 void main() {
 	color = v_color;
 }
 "##,
-        None,
-    )
-        .unwrap();
-
-    let uniforms = MapParams {
-        y_max,
-        y_min,
-        x_min,
-        x_max,
-    };
-
-    event_loop.run(move |ev, _, control_flow| {
-        *control_flow = Wait;
-
-        match ev {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::CloseRequested => {
-                    *control_flow = ControlFlow::Exit;
-                    return;
-                }
-                _ => return,
-            },
-            _ => (),
-        }
-
-        let mut target = display.draw();
-        target.clear_color(255.0, 255.0, 255.0, 1.0);
-        target
-            .draw(
-                &vertex_buffer,
-                &indices,
-                &program,
-                &uniforms,
-                &Default::default(),
-            )
+            None,
+        )
             .unwrap();
-        target.finish().unwrap();
-    });
+
+        let uniforms = self.uniforms;
+        event_loop.run(move |ev, _, control_flow| {
+            *control_flow = Wait;
+
+            match ev {
+                Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::CloseRequested => {
+                        *control_flow = ControlFlow::Exit;
+                        return;
+                    }
+                    _ => return,
+                },
+                _ => (),
+            }
+
+            let mut target = display.draw();
+            target.clear_color(255.0, 255.0, 255.0, 1.0);
+            target
+                .draw(
+                    &vertex_buffer,
+                    &indices,
+                    &program,
+                    &uniforms,
+                    &Default::default(),
+                )
+                .unwrap();
+            target.finish().unwrap();
+        });
+    }
+}
+
+impl Uniforms for MapParams {
+    fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, mut f: F) {
+        f("x_max", UniformValue::Float(self.x_max));
+        f("y_min", UniformValue::Float(self.y_min));
+        f("x_min", UniformValue::Float(self.x_min));
+        f("y_max", UniformValue::Float(self.y_max));
+    }
 }
