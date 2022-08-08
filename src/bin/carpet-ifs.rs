@@ -15,6 +15,6 @@ fn main() {
     ];
 
     let mut program = IfsProgram::default();
-    program.sample(d, [0.0, 0.0, 0.0, 1.0], 200000);
+    program.sample(&d, [0.0, 0.0, 0.0, 1.0], 200000);
     program.run();
 }
