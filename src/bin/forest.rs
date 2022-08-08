@@ -1,4 +1,4 @@
-use ndarray::{Array, array, Ix2};
+use ndarray::{array, Array, Ix2};
 use rand::Rng;
 use rust_fractal_lab::ifs::IfsProgram;
 

@@ -7,7 +7,7 @@ use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
-use glium::uniforms::{UniformBuffer, UniformValue, Uniforms, UniformsStorage};
+use glium::uniforms::UniformBuffer;
 use glium::{implement_uniform_block, uniform, Display, Program, Surface, VertexBuffer};
 use rust_fractal_lab::vertex::Vertex;
 

@@ -36,7 +36,15 @@ pub struct IfsProgram {
 }
 
 impl IfsProgram {
-    pub fn sample_affine(&mut self, d: &Array<f32, Ix2>, color: [f32; 4], iters: usize, scale: f32, shift_x: f32, shift_y: f32) {
+    pub fn sample_affine(
+        &mut self,
+        d: &Array<f32, Ix2>,
+        color: [f32; 4],
+        iters: usize,
+        scale: f32,
+        shift_x: f32,
+        shift_y: f32,
+    ) {
         let probs: Vec<f32> = d.slice(s![.., -1]).to_vec();
         let dist = WeightedIndex::new(probs).unwrap();
         let mut rng = rand::thread_rng();
