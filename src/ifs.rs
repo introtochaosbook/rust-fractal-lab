@@ -36,7 +36,7 @@ pub struct IfsProgram {
 }
 
 impl IfsProgram {
-    pub fn sample(&mut self, d: Array<f32, Ix2>, color: [f32; 4], iters: usize) {
+    pub fn sample_affine(&mut self, d: &Array<f32, Ix2>, color: [f32; 4], iters: usize, scale: f32, shift_x: f32, shift_y: f32) {
         let probs: Vec<f32> = d.slice(s![.., -1]).to_vec();
         let dist = WeightedIndex::new(probs).unwrap();
         let mut rng = rand::thread_rng();
@@ -50,19 +50,26 @@ impl IfsProgram {
             x = r[0] * x + r[1] * y + r[4];
             y = r[2] * x + r[3] * y + r[5];
 
-            self.uniforms.x_min = self.uniforms.x_min.min(x);
-            self.uniforms.x_max = self.uniforms.x_max.max(x);
-            self.uniforms.y_min = self.uniforms.y_min.min(y);
-            self.uniforms.y_max = self.uniforms.y_max.max(y);
+            let scaled_x = (x + shift_x) * scale;
+            let scaled_y = (y + shift_y) * scale;
+
+            self.uniforms.x_min = self.uniforms.x_min.min(scaled_x);
+            self.uniforms.x_max = self.uniforms.x_max.max(scaled_x);
+            self.uniforms.y_min = self.uniforms.y_min.min(scaled_y);
+            self.uniforms.y_max = self.uniforms.y_max.max(scaled_y);
 
             if i >= 10 {
                 // Skip first few iterations
                 self.vertices.push(ColoredVertex {
-                    position: [x, y],
+                    position: [scaled_x, scaled_y],
                     color,
                 })
             }
         }
+    }
+
+    pub fn sample(&mut self, d: &Array<f32, Ix2>, color: [f32; 4], iters: usize) {
+        self.sample_affine(d, color, iters, 1.0, 0.0, 0.0);
     }
 
     pub fn run(&self) {
