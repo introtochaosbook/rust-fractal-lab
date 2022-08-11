@@ -43,6 +43,24 @@ dvec2 complex_div(dvec2 z1, dvec2 z2) {
     return dvec2(real, imag);
 }
 
+dvec2 complex_cos(dvec2 z) {
+    double real = cos(z.x) * cosh(z.y);
+    double imag = -sin(z.x) * sinh(z.y);
+    return dvec2(real, imag);
+}
+
+dvec2 complex_sin(dvec2 z) {
+    double real = sin(z.x) * cosh(z.y);
+    double imag = cos(z.x) * sinh(z.y);
+    return dvec2(real, imag);
+}
+
+dvec2 complex_exp(dvec2 z) {
+    double real = exp(z.x) * cos(z.y);
+    double imag = exp(z.x) * sin(z.y);
+    return dvec2(real, imag);
+}
+
 void main() {
     dvec2 c = dvec2(
         xMin + (xMax - xMin) * (gl_FragCoord.x / width),
