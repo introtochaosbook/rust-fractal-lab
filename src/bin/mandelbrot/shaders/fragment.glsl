@@ -32,14 +32,14 @@ dvec2 complex_sub(dvec2 z1, dvec2 z2) {
 }
 
 dvec2 complex_mult(dvec2 z1, dvec2 z2) {
-    return dvec2(z1.x * z1.y - z2.x * z2.y,
-                z2.x * z1.y + z1.x * z2.y);
+    return dvec2(z1.x * z2.x - z1.y * z2.y,
+                z1.x * z2.y + z1.y * z2.x);
 }
 
 dvec2 complex_div(dvec2 z1, dvec2 z2) {
-    double denom = z1.y * z1.y + z2.y * z2.y;
-    double real = (z1.x * z1.y - z2.x * z2.y) / denom;
-    double imag = (z1.x * z2.y + z1.y * z2.x) / denom;
+    double denom = z2.x * z2.x + z2.y * z2.y;
+    double real = (z1.x * z2.x + z1.y * z2.y) / denom;
+    double imag = (z2.x * z1.y - z1.x * z2.y) / denom;
     return dvec2(real, imag);
 }
 
