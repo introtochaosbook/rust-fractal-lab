@@ -13,25 +13,25 @@ use rust_fractal_lab::vertex::Vertex;
 
 #[derive(Copy, Clone)]
 struct UniformBlock2 {
-    colors_r: [f32; 256],
-    _padding: [f32; 512],
-    _padding2: [f32; 256],
-    colors_g: [f32; 256],
-    _padding3: [f32; 512],
-    _padding4: [f32; 256],
-    colors_b: [f32; 256],
+    colors_r: [u32; 256],
+    _padding: [u32; 512],
+    _padding2: [u32; 256],
+    colors_g: [u32; 256],
+    _padding3: [u32; 512],
+    _padding4: [u32; 256],
+    colors_b: [u32; 256],
 }
 
 impl UniformBlock2 {
-    fn new(colors_r: [f32; 256], colors_g: [f32; 256], colors_b: [f32; 256]) -> Self {
+    fn new(colors_r: [u32; 256], colors_g: [u32; 256], colors_b: [u32; 256]) -> Self {
         Self {
             colors_r,
             colors_g,
             colors_b,
-            _padding: [0.0; 512],
-            _padding2: [0.0; 256],
-            _padding3: [0.0; 512],
-            _padding4: [0.0; 256],
+            _padding: [0; 512],
+            _padding2: [0; 256],
+            _padding3: [0; 512],
+            _padding4: [0; 256],
         }
     }
 }
@@ -108,14 +108,14 @@ void main() {
 
         let gradient = colorous::INFERNO;
         let max_colors: usize = 256;
-        let mut colors_r: [f32; 256] = [0.0; 256];
-        let mut colors_g: [f32; 256] = [0.0; 256];
-        let mut colors_b: [f32; 256] = [0.0; 256];
+        let mut colors_r: [u32; 256] = [0; 256];
+        let mut colors_g: [u32; 256] = [0; 256];
+        let mut colors_b: [u32; 256] = [0; 256];
         for i in 0..max_colors {
             let color = gradient.eval_rational(i, max_colors + 1);
-            colors_r[i] = (color.r as f32) / 255.0;
-            colors_g[i] = (color.g as f32) / 255.0;
-            colors_b[i] = (color.b as f32) / 255.0;
+            colors_r[i] = color.r as u32;
+            colors_g[i] = color.g as u32;
+            colors_b[i] = color.b as u32;
         }
 
         let buffer =

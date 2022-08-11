@@ -14,9 +14,9 @@ uniform double width;
 uniform uint max_colors;
 
 layout(std140) uniform Block {
-    float colors_r[256];
-    float colors_g[256];
-    float colors_b[256];
+    uint colors_r[256];
+    uint colors_g[256];
+    uint colors_b[256];
 };
 
 vec2 complex_square(vec2 z) {
@@ -79,6 +79,6 @@ void main() {
     if (mag < escape) {
         color = vec4(0, 0, 0, 1);
     } else {
-        color = vec4(colors_r[i], colors_g[i], colors_b[i], 1);
+        color = vec4(colors_r[i] / 255.0, colors_g[i] / 255.0, colors_b[i] / 255.0, 1);
     }
 }
