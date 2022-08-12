@@ -13,25 +13,21 @@ use rust_fractal_lab::vertex::Vertex;
 
 #[derive(Copy, Clone)]
 struct UniformBlock2 {
-    colors_r: [u32; 256],
-    _padding: [u32; 512],
-    _padding2: [u32; 256],
-    colors_g: [u32; 256],
-    _padding3: [u32; 512],
-    _padding4: [u32; 256],
-    colors_b: [u32; 256],
+    colors_r: [u32; 1024],
+    _padding3: [u32; 2048+1024],
+    colors_g: [u32; 1024],
+    _padding4: [u32; 2048+1024],
+    colors_b: [u32; 1024],
 }
 
 impl UniformBlock2 {
-    fn new(colors_r: [u32; 256], colors_g: [u32; 256], colors_b: [u32; 256]) -> Self {
+    fn new(colors_r: [u32; 1024], colors_g: [u32; 1024], colors_b: [u32; 1024]) -> Self {
         Self {
             colors_r,
             colors_g,
             colors_b,
-            _padding: [0; 512],
-            _padding2: [0; 256],
-            _padding3: [0; 512],
-            _padding4: [0; 256],
+            _padding3: [0; 2048+1024],
+            _padding4: [0; 2048+1024],
         }
     }
 }
@@ -107,10 +103,10 @@ void main() {
         let dims = display.get_framebuffer_dimensions();
 
         let gradient = colorous::INFERNO;
-        let max_colors: usize = 256;
-        let mut colors_r: [u32; 256] = [0; 256];
-        let mut colors_g: [u32; 256] = [0; 256];
-        let mut colors_b: [u32; 256] = [0; 256];
+        let max_colors: usize = 1024;
+        let mut colors_r: [u32; 1024] = [0; 1024];
+        let mut colors_g: [u32; 1024] = [0; 1024];
+        let mut colors_b: [u32; 1024] = [0; 1024];
         for i in 0..max_colors {
             let color = gradient.eval_rational(i, max_colors + 1);
             colors_r[i] = color.r as u32;

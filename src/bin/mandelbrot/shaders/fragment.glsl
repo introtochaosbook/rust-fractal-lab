@@ -14,9 +14,9 @@ uniform double width;
 uniform uint max_colors;
 
 layout(std140) uniform Block {
-    uint colors_r[256];
-    uint colors_g[256];
-    uint colors_b[256];
+    uint colors_r[1024];
+    uint colors_g[1024];
+    uint colors_b[1024];
 };
 
 vec2 complex_square(vec2 z) {
