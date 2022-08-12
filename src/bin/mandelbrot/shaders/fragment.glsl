@@ -79,6 +79,6 @@ void main() {
     if (mag < escape) {
         color = vec4(0, 0, 0, 1);
     } else {
-        color = vec4(colors_r[i] / 255.0, colors_g[i] / 255.0, colors_b[i] / 255.0, 1);
+        color = vec4(float(colors_r[i]) / 255.0, float(colors_g[i]) / 255.0, float(colors_b[i]) / 255.0, 1);
     }
 }

@@ -103,7 +103,7 @@ void main() {
         let dims = display.get_framebuffer_dimensions();
 
         let gradient = colorous::INFERNO;
-        let max_colors: usize = 1024;
+        let max_colors: usize = 256;
         let mut colors_r: [u32; 1024] = [0; 1024];
         let mut colors_g: [u32; 1024] = [0; 1024];
         let mut colors_b: [u32; 1024] = [0; 1024];
