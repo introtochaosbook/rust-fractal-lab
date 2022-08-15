@@ -1,6 +1,5 @@
 use rand::Rng;
 
-
 #[derive(Copy, Clone)]
 struct Vertex {
     position: [f32; 2],

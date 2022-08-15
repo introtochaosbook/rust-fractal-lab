@@ -56,10 +56,7 @@ fn main() {
     let mut lines = vec![];
     cantor(&mut lines, [-1.0, 0.95], [1.0, 0.95], 0);
 
-    let vertices: Vec<_> = lines
-        .into_iter()
-        .flat_map(Line::into_vertices)
-        .collect();
+    let vertices: Vec<_> = lines.into_iter().flat_map(Line::into_vertices).collect();
 
     let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
     let indices = NoIndices(PrimitiveType::LinesList);
