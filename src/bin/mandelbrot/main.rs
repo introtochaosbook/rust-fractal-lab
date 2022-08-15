@@ -1,41 +1,52 @@
 // Initial code based on https://github.com/remexre/mandelbrot-rust-gl
 
-
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{DeviceEvent, Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
-use glium::uniforms::UniformBuffer;
-use glium::{implement_uniform_block, uniform, Display, Program, Surface, VertexBuffer};
+use glium::uniforms::{UniformValue, Uniforms};
+use glium::{Display, Program, Surface, VertexBuffer};
 use rust_fractal_lab::vertex::Vertex;
 
-#[derive(Copy, Clone)]
-struct UniformBlock2 {
-    colors_r: [u32; 1024],
-    _padding3: [u32; 2048+1024],
-    colors_g: [u32; 1024],
-    _padding4: [u32; 2048+1024],
-    colors_b: [u32; 1024],
+#[derive(Debug)]
+struct DrawParams {
+    x_min: f64,
+    x_max: f64,
+    y_min: f64,
+    y_max: f64,
+
+    width: f64,
+    height: f64,
 }
 
-impl UniformBlock2 {
-    fn new(colors_r: [u32; 1024], colors_g: [u32; 1024], colors_b: [u32; 1024]) -> Self {
-        Self {
-            colors_r,
-            colors_g,
-            colors_b,
-            _padding3: [0; 2048+1024],
-            _padding4: [0; 2048+1024],
+impl DrawParams {
+    fn new(dims: (u32, u32)) -> DrawParams {
+        DrawParams {
+            x_min: -2.0,
+            x_max: 1.0,
+            y_min: -1.0,
+            y_max: 1.0,
+            width: dims.0 as f64,
+            height: dims.1 as f64,
         }
     }
 }
 
-implement_uniform_block!(UniformBlock2, colors_r, colors_g, colors_b);
+impl Uniforms for DrawParams {
+    fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, mut f: F) {
+        f("xMin", UniformValue::Double(self.x_min));
+        f("xMax", UniformValue::Double(self.x_max));
+        f("yMin", UniformValue::Double(self.y_min));
+        f("yMax", UniformValue::Double(self.y_max));
+        f("width", UniformValue::Double(self.width));
+        f("height", UniformValue::Double(self.height));
+    }
+}
 
 fn main() {
-    let event_loop = EventLoop::new();
+    let mut event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
         .with_inner_size(LogicalSize::new(1024.0, 768.0))
@@ -71,16 +82,13 @@ fn main() {
 
     let program = Program::from_source(
         &display,
-        r##"#version 140
-in vec2 position;
-void main() {
-	gl_Position = vec4(position, 0.0, 1.0);
-}
-"##,
+        include_str!("shaders/vertex.glsl"),
         include_str!("shaders/fragment.glsl"),
         None,
     )
     .unwrap();
+
+    let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
 
     event_loop.run(move |ev, _, control_flow| {
         *control_flow = ControlFlow::Wait;
@@ -90,7 +98,6 @@ void main() {
                     *control_flow = ControlFlow::Exit;
                     return;
                 }
-                WindowEvent::MouseInput { .. } => return,
                 _ => return,
             },
             Event::DeviceEvent {
@@ -100,34 +107,6 @@ void main() {
             _ => (),
         }
 
-        let dims = display.get_framebuffer_dimensions();
-
-        let gradient = colorous::INFERNO;
-        let max_colors: usize = 100;
-        let mut colors_r: [u32; 1024] = [0; 1024];
-        let mut colors_g: [u32; 1024] = [0; 1024];
-        let mut colors_b: [u32; 1024] = [0; 1024];
-        for i in 0..max_colors {
-            let color = gradient.eval_rational(i, max_colors + 1);
-            colors_r[i] = color.r as u32;
-            colors_g[i] = color.g as u32;
-            colors_b[i] = color.b as u32;
-        }
-
-        let buffer =
-            UniformBuffer::new(&display, UniformBlock2::new(colors_r, colors_g, colors_b)).unwrap();
-
-        let uniforms = uniform! {
-            Block: &buffer,
-            xMin: -2.0,
-            xMax: 1.0,
-            yMin: -1.0,
-            yMax: 1.0,
-            width: dims.0 as f64,
-            height: dims.1 as f64,
-            max_colors: max_colors as u16,
-        };
-
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
         target
@@ -135,7 +114,7 @@ void main() {
                 &vertex_buffer,
                 &indices,
                 &program,
-                &uniforms,
+                &draw_params,
                 &Default::default(),
             )
             .unwrap();
