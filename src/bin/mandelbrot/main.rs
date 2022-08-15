@@ -19,6 +19,7 @@ struct DrawParams {
 
     width: f64,
     height: f64,
+    max_colors: i64,
 }
 
 impl DrawParams {
@@ -30,6 +31,7 @@ impl DrawParams {
             y_max: 1.0,
             width: dims.0 as f64,
             height: dims.1 as f64,
+            max_colors: 100,
         }
     }
 }
@@ -42,6 +44,7 @@ impl Uniforms for DrawParams {
         f("yMax", UniformValue::Double(self.y_max));
         f("width", UniformValue::Double(self.width));
         f("height", UniformValue::Double(self.height));
+        f("maxColors", UniformValue::Int64(self.max_colors));
     }
 }
 
