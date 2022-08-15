@@ -11,7 +11,7 @@ uniform double yMax;
 uniform double height;
 uniform double width;
 
-uniform uint max_colors;
+uniform uint maxColors;
 
 vec3 color_map(float t) {
     const vec3 c0 = vec3(0.0002189403691192265, 0.001651004631001012, -0.01948089843709184);
@@ -77,7 +77,7 @@ void main() {
     double escape = 4.0;
     vec2 z = vec2(0, 0);
 
-    while (i++ < max_colors && mag < escape) {
+    while (i++ < maxColors && mag < escape) {
         z = complex_square(z) + c;
         mag = length(z);
     }
@@ -85,7 +85,7 @@ void main() {
     if (mag < escape) {
         color = vec4(0, 0, 0, 1);
     } else {
-        vec3 s = color_map(float(i) / float(max_colors));
+        vec3 s = color_map(float(i) / float(maxColors));
         color = vec4(s.xyz, 1);
     }
 }
