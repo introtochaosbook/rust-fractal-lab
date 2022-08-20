@@ -19,7 +19,8 @@ struct DrawParams {
     width: f64,
     height: f64,
     max_colors: u32,
-    f: String
+    f: String,
+    color: String,
 }
 
 impl DrawParams {
@@ -32,7 +33,8 @@ impl DrawParams {
             width: dims.0 as f64,
             height: dims.1 as f64,
             max_colors: 100,
-            f: "FRabbit".into(),
+            f: "FSinh".into(),
+            color: "ColorInferno".into(),
         }
     }
 }
@@ -47,6 +49,7 @@ impl Uniforms for DrawParams {
         f("height", UniformValue::Double(self.height));
         f("maxColors", UniformValue::UnsignedInt(self.max_colors));
         f("F", UniformValue::Subroutine(ShaderStage::Fragment, self.f.as_str()));
+        f("Color", UniformValue::Subroutine(ShaderStage::Fragment, self.color.as_str()));
     }
 }
 
