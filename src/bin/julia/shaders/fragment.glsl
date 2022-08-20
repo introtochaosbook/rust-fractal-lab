@@ -76,14 +76,14 @@ void main() {
 
     color = vec4(1, 1, 1, 1);
 
-    for (uint i = 0; i < maxColors * 2; i++) {
+    for (uint i = 0u; i < maxColors * 2u; i++) {
         c = complex_cos(c);
         double mag = length(c);
         if (mag < attract) {
             // Point is an attractor
             break;
         } else if (mag >= 100) {
-            vec3 s = color_map(float(i/2) / float(maxColors));
+            vec3 s = color_map(float(i/2.0) / float(maxColors));
             color = vec4(s.xyz, 1);
             break;
         }
