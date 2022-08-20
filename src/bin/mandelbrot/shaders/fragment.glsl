@@ -70,7 +70,7 @@ vec2 complex_exp(vec2 z) {
 void main() {
     vec2 c = vec2(
         xMin + (xMax - xMin) * (gl_FragCoord.x / width),
-        yMax - (yMax - yMin) * (gl_FragCoord.y / height));
+        yMin + (yMax - yMin) * (gl_FragCoord.y / height));
 
     uint i = 0u;
     double mag = 0;
