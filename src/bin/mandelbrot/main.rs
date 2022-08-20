@@ -96,8 +96,6 @@ void main() {
     )
     .unwrap();
 
-    let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
-
     event_loop.run(move |ev, _, control_flow| {
         *control_flow = ControlFlow::Wait;
         match ev {
@@ -114,6 +112,8 @@ void main() {
             } => return,
             _ => (),
         }
+
+        let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
 
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
