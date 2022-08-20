@@ -6,6 +6,7 @@ use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 use glium::uniforms::{UniformValue, Uniforms};
 use glium::{Display, Program, Surface, VertexBuffer};
+use glium::program::ShaderStage;
 use rust_fractal_lab::vertex::Vertex;
 
 #[derive(Debug)]
@@ -18,6 +19,7 @@ struct DrawParams {
     width: f64,
     height: f64,
     max_colors: u32,
+    f: String
 }
 
 impl DrawParams {
@@ -30,6 +32,7 @@ impl DrawParams {
             width: dims.0 as f64,
             height: dims.1 as f64,
             max_colors: 100,
+            f: "FRabbit".into(),
         }
     }
 }
@@ -43,6 +46,7 @@ impl Uniforms for DrawParams {
         f("width", UniformValue::Double(self.width));
         f("height", UniformValue::Double(self.height));
         f("maxColors", UniformValue::UnsignedInt(self.max_colors));
+        f("F", UniformValue::Subroutine(ShaderStage::Fragment, self.f.as_str()));
     }
 }
 

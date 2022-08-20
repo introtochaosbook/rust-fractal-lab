@@ -1,5 +1,6 @@
 #version 140
 #extension GL_ARB_gpu_shader_fp64 : require
+#extension GL_ARB_shader_subroutine : require
 
 out vec4 color;
 
@@ -67,8 +68,24 @@ vec2 complex_exp(vec2 z) {
     return vec2(real, imag);
 }
 
+subroutine vec2 f_t(vec2 z);
+
+subroutine uniform f_t F;
+
+subroutine(f_t)
+vec2 FCosh(vec2 z) {
+    return complex_cos(z);
+}
+
+subroutine(f_t)
+vec2 FRabbit(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(-0.122,0.745));
+    return z;
+}
+
 void main() {
-    vec2 c = vec2(
+    vec2 z = vec2(
         xMin + (xMax - xMin) * (gl_FragCoord.x / width),
         yMax - (yMax - yMin) * (gl_FragCoord.y / height));
 
@@ -77,8 +94,9 @@ void main() {
     color = vec4(1, 1, 1, 1);
 
     for (uint i = 0u; i < maxColors * 2u; i++) {
-        c = complex_cos(c);
-        double mag = length(c);
+        // Apply function
+        z = F(z);
+        double mag = length(z);
         if (mag < attract) {
             // Point is an attractor
             break;
