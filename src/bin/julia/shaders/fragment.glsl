@@ -72,31 +72,20 @@ void main() {
         xMin + (xMax - xMin) * (gl_FragCoord.x / width),
         yMax - (yMax - yMin) * (gl_FragCoord.y / height));
 
-    uint i = 0u;
-    double attract = 0.0001;
+    const double attract = 0.0001;
 
-    bool do_color = false;
+    color = vec4(1, 1, 1, 1);
 
-    while (true) {
+    for (uint i = 0; i < maxColors * 2; i++) {
         c = complex_cos(c);
         double mag = length(c);
         if (mag < attract) {
-            do_color = true;
+            // Point is an attractor
+            break;
+        } else if (mag >= 100) {
+            vec3 s = color_map(float(i/2) / float(maxColors));
+            color = vec4(s.xyz, 1);
             break;
         }
-
-        if ((mag < 100) && (i < maxColors)) {
-            i++;
-        } else {
-            do_color = false;
-            break;
-        }
-    }
-
-    if (do_color) {
-        color = vec4(0, 0, 0, 1);
-    } else {
-        vec3 s = color_map(float(i) / float(maxColors));
-        color = vec4(s.xyz, 1);
     }
 }

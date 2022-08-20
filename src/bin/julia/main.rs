@@ -24,9 +24,9 @@ impl DrawParams {
     fn new(dims: (u32, u32)) -> DrawParams {
         DrawParams {
             x_min: -2.0,
-            x_max: 1.0,
-            y_min: -1.0,
-            y_max: 1.0,
+            x_max: 2.0,
+            y_min: -2.0,
+            y_max: 2.0,
             width: dims.0 as f64,
             height: dims.1 as f64,
             max_colors: 100,
