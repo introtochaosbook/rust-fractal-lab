@@ -8,17 +8,18 @@ use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 use glium::uniforms::{UniformValue, Uniforms};
 use glium::{Display, Program, Surface, VertexBuffer};
+use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 
 #[derive(Debug)]
 struct DrawParams {
-    x_min: f64,
-    x_max: f64,
-    y_min: f64,
-    y_max: f64,
+    x_min: f32,
+    x_max: f32,
+    y_min: f32,
+    y_max: f32,
 
-    width: f64,
-    height: f64,
+    width: f32,
+    height: f32,
     max_colors: u32,
 }
 
@@ -29,8 +30,8 @@ impl DrawParams {
             x_max: 1.0,
             y_min: -1.0,
             y_max: 1.0,
-            width: dims.0 as f64,
-            height: dims.1 as f64,
+            width: dims.0 as f32,
+            height: dims.1 as f32,
             max_colors: 100,
         }
     }
@@ -38,12 +39,12 @@ impl DrawParams {
 
 impl Uniforms for DrawParams {
     fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, mut f: F) {
-        f("xMin", UniformValue::Double(self.x_min));
-        f("xMax", UniformValue::Double(self.x_max));
-        f("yMin", UniformValue::Double(self.y_min));
-        f("yMax", UniformValue::Double(self.y_max));
-        f("width", UniformValue::Double(self.width));
-        f("height", UniformValue::Double(self.height));
+        f("xMin", UniformValue::Float(self.x_min));
+        f("xMax", UniformValue::Float(self.x_max));
+        f("yMin", UniformValue::Float(self.y_min));
+        f("yMax", UniformValue::Float(self.y_max));
+        f("width", UniformValue::Float(self.width));
+        f("height", UniformValue::Float(self.height));
         f("maxColors", UniformValue::UnsignedInt(self.max_colors));
     }
 }
@@ -91,7 +92,7 @@ void main() {
 	gl_Position = vec4(position, 0.0, 1.0);
 }
 "##,
-        include_str!("shaders/fragment.glsl"),
+        &build_shader(include_str!("shaders/fragment.glsl")),
         None,
     )
     .unwrap();
