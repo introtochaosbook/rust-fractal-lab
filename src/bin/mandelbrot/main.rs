@@ -50,7 +50,7 @@ impl Uniforms for DrawParams {
 }
 
 fn main() {
-    let mut event_loop = EventLoop::new();
+    let event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
         .with_inner_size(LogicalSize::new(1024.0, 768.0))
@@ -102,7 +102,7 @@ void main() {
             _ => (),
         }
 
-        let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
+        let draw_params = DrawParams::new(display.get_framebuffer_dimensions());
 
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
