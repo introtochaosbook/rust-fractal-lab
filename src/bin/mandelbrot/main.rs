@@ -60,7 +60,7 @@ fn main() {
 
     let display = Display::new(wb, cb, &event_loop).unwrap();
 
-    let vertices = [
+    let vertices: [Vertex; 6] = [
         [1.0, -1.0].into(),
         [-1.0, 1.0].into(),
         [-1.0, -1.0].into(),
