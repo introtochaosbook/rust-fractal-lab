@@ -61,24 +61,12 @@ fn main() {
     let display = Display::new(wb, cb, &event_loop).unwrap();
 
     let vertices = [
-        Vertex {
-            position: [1.0, -1.0],
-        },
-        Vertex {
-            position: [-1.0, 1.0],
-        },
-        Vertex {
-            position: [-1.0, -1.0],
-        },
-        Vertex {
-            position: [1.0, 1.0],
-        },
-        Vertex {
-            position: [1.0, -1.0],
-        },
-        Vertex {
-            position: [-1.0, 1.0],
-        },
+        [1.0, -1.0].into(),
+        [-1.0, 1.0].into(),
+        [-1.0, -1.0].into(),
+        [1.0, 1.0].into(),
+        [1.0, -1.0].into(),
+        [-1.0, 1.0].into(),
     ];
 
     let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
