@@ -1,13 +1,15 @@
 // Initial code based on https://github.com/remexre/mandelbrot-rust-gl
 
+use std::borrow::Borrow;
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{DeviceEvent, Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
+use glium::pixel_buffer::PixelBuffer;
 use glium::uniforms::{UniformValue, Uniforms};
-use glium::{Display, Program, Surface, VertexBuffer};
+use glium::{Display, DrawParameters, Program, Surface, VertexBuffer};
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 
@@ -32,7 +34,7 @@ impl DrawParams {
             y_max: 1.0,
             width: dims.0 as f32,
             height: dims.1 as f32,
-            max_colors: 100,
+            max_colors: 256,
         }
     }
 }
@@ -84,6 +86,61 @@ void main() {
         None,
     )
     .unwrap();
+
+    let color1 = glium::Texture2d::empty_with_format(
+        &display,
+        glium::texture::UncompressedFloatFormat::U8U8U8U8,
+        glium::texture::MipmapsOption::NoMipmap,
+        1024,
+        768,
+    )
+    .unwrap();
+    color1.as_surface().clear_color(0.0, 0.0, 0.0, 0.0);
+
+    let depth = glium::framebuffer::DepthRenderBuffer::new(
+        &display,
+        glium::texture::DepthFormat::F32,
+        1024, 768,
+    ).unwrap();
+
+    let texture = glium::texture::DepthTexture2d::empty(&display, 1024, 768)
+        .unwrap();
+
+    // building the framebuffer
+    let mut framebuffer = glium::framebuffer::SimpleFrameBuffer::with_depth_buffer(&display, &color1, &texture).unwrap();
+
+    let draw_params = DrawParams::new(display.get_framebuffer_dimensions());
+
+    framebuffer
+        .draw(
+            &vertex_buffer,
+            &indices,
+            &program,
+            &draw_params,
+            &Default::default(),
+        )
+        .unwrap();
+
+    display.assert_no_error(None);
+
+    let p: Vec<Vec<(u8, u8, u8, u8)>> = color1.read();
+    let p: Vec<_> = p.iter().flatten().collect();
+
+    let recover = &(
+        1.0f32,
+        1.0f32 / 255.0,
+        1.0f32 / 65025.0,
+        1.0f32 / 16581375.0,
+    );
+
+    //p.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+    for pixel in p.iter() {
+        if pixel.0 == 0 {
+            continue;
+        }
+        assert_eq!(pixel.0, 2);
+    }
 
     event_loop.run(move |ev, _, control_flow| {
         *control_flow = ControlFlow::Wait;

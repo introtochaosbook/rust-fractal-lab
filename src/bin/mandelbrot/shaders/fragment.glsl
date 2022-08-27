@@ -1,7 +1,7 @@
-#version 140
+#version 330
 #extension GL_ARB_shader_subroutine : require
 
-out vec4 color;
+out vec4 depth;
 
 uniform float xMin;
 uniform float xMax;
@@ -14,7 +14,7 @@ uniform float width;
 uniform uint maxColors;
 
 // <inject:complex.glsl>
-// <inject:colors.glsl>
+// <inject:utils.glsl>
 
 void main() {
     vec2 c = vec2(
@@ -30,6 +30,8 @@ void main() {
         z = complex_square(z) + c;
         mag = length(z);
     }
+
+    gl_FragDepth = 100;
 
     if (mag < escape) {
         color = vec4(0, 0, 0, 1);
