@@ -67,7 +67,8 @@ void main() {
             // Point is an attractor
             break;
         } else if (mag >= 100) {
-            vec3 s = Color(float(i/2.0) / float(maxColors));
+            // Point escaped
+            vec3 s = Color(float(i) / float(maxColors * 2u));
             color = vec4(s.xyz, 1);
             break;
         }
