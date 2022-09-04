@@ -50,6 +50,13 @@ vec2 FDragon(vec2 z) {
     return z;
 }
 
+subroutine(f_t)
+vec2 FAmoeba(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(0.3, -0.4));
+    return z;
+}
+
 void main() {
     vec2 z = vec2(
         xMin + (xMax - xMin) * (gl_FragCoord.x / width),
