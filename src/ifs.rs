@@ -7,7 +7,7 @@ use glium::index::{NoIndices, PrimitiveType};
 
 use glium::glutin::event_loop::ControlFlow::Wait;
 use glium::uniforms::{UniformValue, Uniforms};
-use glium::{implement_vertex, Display, Program, Surface, VertexBuffer};
+use glium::{implement_vertex, Display, Program, Surface, VertexBuffer, DrawParameters};
 
 use ndarray::{s, Array, Ix2};
 use rand::distributions::{Distribution, WeightedIndex};
@@ -80,7 +80,7 @@ impl IfsProgram {
         self.sample_affine(d, color, iters, 1.0, 0.0, 0.0);
     }
 
-    pub fn run(&self) {
+    pub fn run(&self, point_size: Option<f32>) {
         let event_loop = EventLoop::new();
 
         let wb = WindowBuilder::new()
@@ -143,13 +143,16 @@ void main() {
 
             let mut target = display.draw();
             target.clear_color(255.0, 255.0, 255.0, 1.0);
+
+            let mut p = DrawParameters::default();
+            p.point_size = point_size;
             target
                 .draw(
                     &vertex_buffer,
                     &indices,
                     &program,
                     &uniforms,
-                    &Default::default(),
+                    &p,
                 )
                 .unwrap();
             target.finish().unwrap();

@@ -30,5 +30,5 @@ fn main() {
         program.sample_affine(&d, color, 1000, scale, shift_x, shift_y);
     }
 
-    program.run();
+    program.run(Some(2.0));
 }
