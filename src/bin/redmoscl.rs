@@ -1,7 +1,7 @@
 use ndarray::{array, Array, Ix2};
 use rand::Rng;
 use rust_fractal_lab::ifs::IfsProgram;
-use rust_fractal_lab::trees::draw_forest;
+use rust_fractal_lab::forest::draw_forest;
 
 fn main() {
     let mut program = IfsProgram::default();
