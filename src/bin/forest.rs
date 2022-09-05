@@ -20,8 +20,11 @@ fn main() {
 
         let color = {
             match rng.gen_range(0..=9) {
+                // Most trees are green
                 0..=7 => [0.0, 100.0 / 255.0, 0.0, 1.0],
+                // Some trees are yellow
                 8 => [204.0 / 255.0, 244.0 / 255.0, 0.0, 1.0],
+                // Some trees are dead (brown)
                 9 => [165.0 / 255.0, 42.0 / 255.0, 42.0 / 255.0, 1.0],
                 _ => unreachable!(),
             }
@@ -30,5 +33,5 @@ fn main() {
         program.sample_affine(&d, color, 1000, scale, shift_x, shift_y);
     }
 
-    program.run(Some(2.0));
+    program.run(Some(1.5));
 }
