@@ -33,9 +33,9 @@ impl DrawParams {
             y_max: 2.0,
             width: dims.0 as f32,
             height: dims.1 as f32,
-            max_colors: 100,
-            f: "FAmoeba".into(),
-            color: "ColorInferno".into(),
+            max_colors: 10,
+            f: "FFlower1".into(),
+            color: "ColorTurbo".into(),
         }
     }
 }
