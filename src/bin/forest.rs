@@ -1,4 +1,3 @@
-use ndarray::{array, Array, Ix2};
 use rust_fractal_lab::ifs::IfsProgram;
 use rust_fractal_lab::trees::draw_forest;
 
