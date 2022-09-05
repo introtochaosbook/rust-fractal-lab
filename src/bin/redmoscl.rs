@@ -12,6 +12,23 @@ fn main() {
     // Keep the trees to the bottom half of the screen
     program.normalize_points_to_ranges(-1.0, 1.0, -1.0, 0.5);
 
+    let inc = 8.0;
+    let cloud_d: Array<f32, Ix2> = array![
+        [0.33, 1.0, 0.0, 0.33, 0.0, 0.0, 0.125],
+        [0.33, 1.0, 0.0, 0.33, inc, 0.0, 0.125],
+        [0.33, 1.0, 0.0, 0.33, 1.0, inc, 0.125],
+        [0.33, 1.0, 0.0, 0.33, inc, inc, 0.125],
+        [0.33, 0.0, 0.0, 0.33, inc/ 2.0, 1.0, 0.125],
+        [0.33, 0.0, 0.0, 0.33, inc, inc / 2.0, 0.125],
+        [0.33, 0.0, 0.0, 0.33, 1.0, inc / 2.0, 0.125],
+        [0.33, 0.0, 0.0, 0.33, inc / 2.0, inc, 0.125],
+    ];
+
+    // Draw clouds
+    program.sample(&cloud_d, [99.0 / 255.0, 99.0 / 255.0, 99.0 / 255.0, 1.0], 30000);
+    // Place the clouds roughly in the upper third of the screen
+    program.normalize_points_to_ranges(-1.0, 1.0, 0.6, 1.0);
+
     // Draw the redwoods themselves
     let inc = 6.0;
     let redwood_d: Array<f32, Ix2> = array![
