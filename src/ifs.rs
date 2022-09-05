@@ -68,15 +68,14 @@ impl IfsProgram {
             x = r[0] * x + r[1] * y + r[4];
             y = r[2] * x + r[3] * y + r[5];
 
-            let scaled_x = (x + shift_x) * scale;
-            let scaled_y = (y + shift_y) * scale;
-
-            self.uniforms.x_min = self.uniforms.x_min.min(scaled_x);
-            self.uniforms.x_max = self.uniforms.x_max.max(scaled_x);
-            self.uniforms.y_min = self.uniforms.y_min.min(scaled_y);
-            self.uniforms.y_max = self.uniforms.y_max.max(scaled_y);
-
             if i >= 10 {
+                let scaled_x = (x + shift_x) * scale;
+                let scaled_y = (y + shift_y) * scale;
+                self.uniforms.x_min = self.uniforms.x_min.min(scaled_x);
+                self.uniforms.x_max = self.uniforms.x_max.max(scaled_x);
+                self.uniforms.y_min = self.uniforms.y_min.min(scaled_y);
+                self.uniforms.y_max = self.uniforms.y_max.max(scaled_y);
+
                 // Skip first few iterations
                 self.vertices.push(ColoredVertex {
                     position: [scaled_x, scaled_y],
