@@ -11,9 +11,8 @@ use glium::{implement_vertex, Display, Program, Surface, VertexBuffer, DrawParam
 
 use ndarray::{s, Array, Ix2};
 use rand::distributions::{Distribution, WeightedIndex};
-use rand::Rng;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 struct ColoredVertex {
     position: [f32; 2],
     color: [f32; 4],
@@ -21,12 +20,23 @@ struct ColoredVertex {
 
 implement_vertex!(ColoredVertex, position, color);
 
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Debug)]
 struct MapParams {
     x_min: f32,
     x_max: f32,
     y_min: f32,
     y_max: f32,
+}
+
+impl Default for MapParams {
+    fn default() -> Self {
+        Self {
+            x_min: f32::MAX,
+            x_max: f32::MIN,
+            y_min: f32::MAX,
+            y_max: f32::MIN,
+        }
+    }
 }
 
 #[derive(Default)]
