@@ -15,6 +15,8 @@ use glium::{Display, DrawParameters, Program, Surface, Texture2d, VertexBuffer};
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 use std::borrow::Borrow;
+use std::cell::RefCell;
+use std::rc::Rc;
 use glium::program::ShaderStage;
 
 #[derive(Debug)]
@@ -108,48 +110,23 @@ void main() {
         768,
     )
     .unwrap();
+
     iteration_texture
         .as_surface()
         .clear_color(0.0, 0.0, 0.0, 0.0);
 
+    
+
+    let iteration_texture = Rc::new(iteration_texture);
+
+    let f = glium::framebuffer::SimpleFrameBuffer::new(&display, iteration_texture).unwrap();
+
     // building the framebuffer
-    let mut framebuffer =
-        glium::framebuffer::SimpleFrameBuffer::new(&display, &iteration_texture).unwrap();
+    let framebuffer = Rc::new(RefCell::new(f));
 
     let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
 
-    framebuffer
-        .draw(
-            &vertex_buffer,
-            &indices,
-            &program,
-            &draw_params,
-            &Default::default(),
-        )
-        .unwrap();
-
-    display.assert_no_error(None);
-
-    let p: Vec<Vec<(u32, u32)>> = unsafe { iteration_texture.unchecked_read() };
-
-    let mut p: Vec<_> = p
-        .into_iter()
-        .flatten()
-        .filter(|b| b.1 != 1)
-        .map(|b| b.0)
-        .collect();
-    p.sort_unstable();
-
-    draw_params.ranges = [
-        p[0],
-        p[p.len() * 3 / 4 - 1],
-        p[p.len() * 7 / 8 - 1],
-        *p.last().unwrap(),
-    ];
-
-    eprintln!("{:?}", draw_params.ranges);
-
-    let program = Program::from_source(
+    let program2 = Program::from_source(
         &display,
         r##"#version 140
 in vec2 position;
@@ -163,6 +140,39 @@ void main() {
     .unwrap();
 
     event_loop.run(move |ev, _, control_flow| {
+        let framebuffer = framebuffer.clone();
+
+        framebuffer.borrow_mut().draw(
+                &vertex_buffer,
+                &indices,
+                &program,
+                &draw_params,
+                &Default::default(),
+            )
+            .unwrap();
+
+        display.assert_no_error(None);
+
+        let p: Vec<Vec<(u32, u32)>> = unsafe { iteration_texture.unchecked_read() };
+
+        let mut p: Vec<_> = p
+            .into_iter()
+            .flatten()
+            .filter(|b| b.1 != 1)
+            .map(|b| b.0)
+            .collect();
+        p.sort_unstable();
+
+        draw_params.ranges = [
+            p[0],
+            p[p.len() * 3 / 4 - 1],
+            p[p.len() * 7 / 8 - 1],
+            *p.last().unwrap(),
+        ];
+
+        eprintln!("{:?}", draw_params.ranges);
+
+
         *control_flow = Wait;
 
         match ev {
@@ -182,7 +192,7 @@ void main() {
             .draw(
                 &vertex_buffer,
                 &indices,
-                &program,
+                &program2,
                 &draw_params,
                 &Default::default(),
             )
