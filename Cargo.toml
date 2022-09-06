@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-glium = "0.32.1"
+glium = { version = "0.32.1", path = "../../repos/glium" }
 imgui = { git = "https://github.com/introtochaosbook/imgui-rs.git", branch = "cpl/glium-0.32.1" }
 imgui-glium-renderer = { git = "https://github.com/introtochaosbook/imgui-rs.git", branch = "cpl/glium-0.32.1" }
 imgui-winit-support = { git = "https://github.com/introtochaosbook/imgui-rs.git", branch = "cpl/glium-0.32.1" }
