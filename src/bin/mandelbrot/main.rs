@@ -15,6 +15,7 @@ use glium::{Display, DrawParameters, Program, Surface, Texture2d, VertexBuffer};
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 use std::borrow::Borrow;
+use glium::program::ShaderStage;
 
 #[derive(Debug)]
 struct DrawParams {
@@ -27,6 +28,7 @@ struct DrawParams {
     height: f32,
     max_colors: u32,
     ranges: [u32; 4],
+    color: String,
 }
 
 impl DrawParams {
@@ -40,6 +42,7 @@ impl DrawParams {
             height: dims.1 as f32,
             max_colors: 256,
             ranges: [0; 4],
+            color: "ColorInferno".into(),
         }
     }
 }
@@ -54,6 +57,10 @@ impl Uniforms for DrawParams {
         f("height", UniformValue::Float(self.height));
         f("maxColors", UniformValue::UnsignedInt(self.max_colors));
         f("ranges", UniformValue::UnsignedIntVec4(self.ranges));
+        f(
+            "Color",
+            UniformValue::Subroutine(ShaderStage::Fragment, self.color.as_str()),
+        );
     }
 }
 
@@ -105,21 +112,6 @@ void main() {
         .as_surface()
         .clear_color(0.0, 0.0, 0.0, 0.0);
 
-    let pixel_texture = Texture2d::empty_with_format(
-        &display,
-        glium::texture::UncompressedFloatFormat::U8U8U8U8,
-        glium::texture::MipmapsOption::NoMipmap,
-        1024,
-        768,
-    )
-    .unwrap();
-
-    //let output = ;
-    let mut fb = MultiOutputFrameBuffer::new(
-        &display,
-        [("depth", &iteration_texture), ("color", &pixel_texture)],
-    );
-
     // building the framebuffer
     let mut framebuffer =
         glium::framebuffer::SimpleFrameBuffer::new(&display, &iteration_texture).unwrap();
@@ -146,7 +138,7 @@ void main() {
         .filter(|b| b.1 != 1)
         .map(|b| b.0)
         .collect();
-    p.sort();
+    p.sort_unstable();
 
     draw_params.ranges = [
         p[0],
@@ -157,7 +149,18 @@ void main() {
 
     eprintln!("{:?}", draw_params.ranges);
 
-    drop(framebuffer);
+    let program = Program::from_source(
+        &display,
+        r##"#version 140
+in vec2 position;
+void main() {
+	gl_Position = vec4(position, 0.0, 1.0);
+}
+"##,
+        &build_shader(include_str!("shaders/fragment-step-2.glsl")),
+        None,
+    )
+    .unwrap();
 
     event_loop.run(move |ev, _, control_flow| {
         *control_flow = Wait;
