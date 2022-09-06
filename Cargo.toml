@@ -14,6 +14,10 @@ ndarray = "0.15.4"
 once_cell = "1.13"
 rand = "0.8.5"
 regex = "1"
+ouroboros = "0.15"
+
+[patch.crates-io]
+glium = { path = "../../repos/glium" }
 
 [dev-dependencies]
 bencher = "0.1.5"

@@ -1,7 +1,7 @@
 // Initial code based on https://github.com/remexre/mandelbrot-rust-gl
 
 use crate::ControlFlow::Wait;
-use glium::framebuffer::{MultiOutputFrameBuffer, ToColorAttachment};
+use glium::framebuffer::{ColorAttachment, MultiOutputFrameBuffer, ToColorAttachment};
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{DeviceEvent, Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
@@ -9,7 +9,7 @@ use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 use glium::pixel_buffer::PixelBuffer;
-use glium::texture::UnsignedTexture2d;
+use glium::texture::{Texture1d, UnsignedTexture2d};
 use glium::uniforms::{UniformValue, Uniforms};
 use glium::{Display, DrawParameters, Program, Surface, Texture2d, VertexBuffer};
 use rust_fractal_lab::shader_builder::build_shader;
@@ -18,6 +18,21 @@ use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::rc::Rc;
 use glium::program::ShaderStage;
+
+use ouroboros::self_referencing;
+
+pub struct Dt {
+    color_texture: Texture2d,
+    iteration_texture: UnsignedTexture2d,
+}
+
+#[self_referencing]
+struct Data {
+    dt: Dt,
+    #[borrows(dt)]
+    #[covariant]
+    buffs: (glium::framebuffer::MultiOutputFrameBuffer<'this>, &'this Dt),
+}
 
 #[derive(Debug)]
 struct DrawParams {
@@ -115,88 +130,87 @@ void main() {
         .as_surface()
         .clear_color(0.0, 0.0, 0.0, 0.0);
 
-    
+    let color_texture = Texture2d::empty_with_format(
+        &display, glium::texture::UncompressedFloatFormat::U8U8U8U8,
+        glium::texture::MipmapsOption::NoMipmap, 1024, 768
+    ).unwrap();
 
-    let iteration_texture = Rc::new(iteration_texture);
 
-    let f = glium::framebuffer::SimpleFrameBuffer::new(&display, iteration_texture).unwrap();
-
-    // building the framebuffer
-    let framebuffer = Rc::new(RefCell::new(f));
+    let mut tenants = DataBuilder {
+        dt: Dt {
+            color_texture,
+            iteration_texture,
+        },
+        buffs_builder: |dt| {
+            let output =  [("color", dt.color_texture.to_color_attachment()), ("depth", dt.iteration_texture.to_color_attachment())];
+            let framebuffer = MultiOutputFrameBuffer::new(&display, output).unwrap();
+            (framebuffer, dt)
+        }
+    }.build();
 
     let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
 
-    let program2 = Program::from_source(
-        &display,
-        r##"#version 140
-in vec2 position;
-void main() {
-	gl_Position = vec4(position, 0.0, 1.0);
-}
-"##,
-        &build_shader(include_str!("shaders/fragment-step-2.glsl")),
-        None,
-    )
-    .unwrap();
-
     event_loop.run(move |ev, _, control_flow| {
-        let framebuffer = framebuffer.clone();
+        tenants.with_mut(|fields| {
+            let framebuffer = &mut fields.buffs.0;
+            let dt = fields.dt;
 
-        framebuffer.borrow_mut().draw(
+            framebuffer.draw(
                 &vertex_buffer,
                 &indices,
                 &program,
                 &draw_params,
                 &Default::default(),
             )
-            .unwrap();
+                .unwrap();
 
-        display.assert_no_error(None);
+            display.assert_no_error(None);
 
-        let p: Vec<Vec<(u32, u32)>> = unsafe { iteration_texture.unchecked_read() };
+            let p: Vec<Vec<(u32, u32)>> = unsafe { dt.iteration_texture.unchecked_read() };
 
-        let mut p: Vec<_> = p
-            .into_iter()
-            .flatten()
-            .filter(|b| b.1 != 1)
-            .map(|b| b.0)
-            .collect();
-        p.sort_unstable();
+            let mut p: Vec<_> = p
+                .into_iter()
+                .flatten()
+                .filter(|b| b.1 != 1)
+                .map(|b| b.0)
+                .collect();
+            p.sort_unstable();
 
-        draw_params.ranges = [
-            p[0],
-            p[p.len() * 3 / 4 - 1],
-            p[p.len() * 7 / 8 - 1],
-            *p.last().unwrap(),
-        ];
+            draw_params.ranges = [
+                p[0],
+                p[p.len() * 3 / 4 - 1],
+                p[p.len() * 7 / 8 - 1],
+                *p.last().unwrap(),
+            ];
 
-        eprintln!("{:?}", draw_params.ranges);
+            eprintln!("{:?}", draw_params.ranges);
 
+            *control_flow = Wait;
 
-        *control_flow = Wait;
+            match ev {
+                Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::CloseRequested => {
+                        *control_flow = ControlFlow::Exit;
+                        return;
+                    }
+                    _ => return,
+                },
+                _ => (),
+            }
 
-        match ev {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::CloseRequested => {
-                    *control_flow = ControlFlow::Exit;
-                    return;
-                }
-                _ => return,
-            },
-            _ => (),
-        }
-
-        let mut target = display.draw();
-        target.clear_color(255.0, 255.0, 255.0, 1.0);
-        target
-            .draw(
-                &vertex_buffer,
-                &indices,
-                &program2,
-                &draw_params,
-                &Default::default(),
-            )
-            .unwrap();
-        target.finish().unwrap();
+            let mut target = display.draw();
+            dt.color_texture.sync_shader_writes_for_surface();
+            dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
+            // target
+            //     .draw(
+            //         &vertex_buffer,
+            //         &indices,
+            //         &program,
+            //         &draw_params,
+            //         &Default::default(),
+            //     )
+            //     .unwrap();
+            target.finish().unwrap();
+        });
     });
 }
