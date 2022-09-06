@@ -1,5 +1,7 @@
 // Initial code based on https://github.com/remexre/mandelbrot-rust-gl
 
+use crate::ControlFlow::Wait;
+use glium::framebuffer::{MultiOutputFrameBuffer, ToColorAttachment};
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{DeviceEvent, Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
@@ -9,11 +11,10 @@ use glium::index::{NoIndices, PrimitiveType};
 use glium::pixel_buffer::PixelBuffer;
 use glium::texture::UnsignedTexture2d;
 use glium::uniforms::{UniformValue, Uniforms};
-use glium::{Display, DrawParameters, Program, Surface, VertexBuffer};
+use glium::{Display, DrawParameters, Program, Surface, Texture2d, VertexBuffer};
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 use std::borrow::Borrow;
-use crate::ControlFlow::Wait;
 
 #[derive(Debug)]
 struct DrawParams {
@@ -38,7 +39,7 @@ impl DrawParams {
             width: dims.0 as f32,
             height: dims.1 as f32,
             max_colors: 256,
-            ranges: [0; 4]
+            ranges: [0; 4],
         }
     }
 }
@@ -92,7 +93,7 @@ void main() {
     )
     .unwrap();
 
-    let color1 = UnsignedTexture2d::empty_with_format(
+    let iteration_texture = UnsignedTexture2d::empty_with_format(
         &display,
         glium::texture::UncompressedUintFormat::U32,
         glium::texture::MipmapsOption::NoMipmap,
@@ -100,10 +101,28 @@ void main() {
         768,
     )
     .unwrap();
-    color1.as_surface().clear_color(0.0, 0.0, 0.0, 0.0);
+    iteration_texture
+        .as_surface()
+        .clear_color(0.0, 0.0, 0.0, 0.0);
+
+    let pixel_texture = Texture2d::empty_with_format(
+        &display,
+        glium::texture::UncompressedFloatFormat::U8U8U8U8,
+        glium::texture::MipmapsOption::NoMipmap,
+        1024,
+        768,
+    )
+    .unwrap();
+
+    //let output = ;
+    let mut fb = MultiOutputFrameBuffer::new(
+        &display,
+        [("depth", &iteration_texture), ("color", &pixel_texture)],
+    );
 
     // building the framebuffer
-    let mut framebuffer = glium::framebuffer::SimpleFrameBuffer::new(&display, &color1).unwrap();
+    let mut framebuffer =
+        glium::framebuffer::SimpleFrameBuffer::new(&display, &iteration_texture).unwrap();
 
     let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
 
@@ -119,15 +138,20 @@ void main() {
 
     display.assert_no_error(None);
 
-    let p: Vec<Vec<(u32, u32)>> = unsafe { color1.unchecked_read() };
+    let p: Vec<Vec<(u32, u32)>> = unsafe { iteration_texture.unchecked_read() };
 
-    let mut p: Vec<_> = p.into_iter().flatten().filter(|b| b.1 != 1).map(|b| b.0).collect();
+    let mut p: Vec<_> = p
+        .into_iter()
+        .flatten()
+        .filter(|b| b.1 != 1)
+        .map(|b| b.0)
+        .collect();
     p.sort();
 
     draw_params.ranges = [
         p[0],
-        p[p.len() * 3/4 - 1],
-        p[p.len() * 7/8 - 1],
+        p[p.len() * 3 / 4 - 1],
+        p[p.len() * 7 / 8 - 1],
         *p.last().unwrap(),
     ];
 
