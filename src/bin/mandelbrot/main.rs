@@ -42,7 +42,7 @@ impl DrawParams {
             height: dims.1 as f32,
             max_colors: 256,
             ranges: [0; 4],
-            color: "ColorInferno".into(),
+            color: "ColorTurbo".into(),
         }
     }
 }
@@ -100,56 +100,7 @@ void main() {
     )
     .unwrap();
 
-    let iteration_texture = UnsignedTexture2d::empty_with_format(
-        &display,
-        glium::texture::UncompressedUintFormat::U32,
-        glium::texture::MipmapsOption::NoMipmap,
-        1024,
-        768,
-    )
-    .unwrap();
-    iteration_texture
-        .as_surface()
-        .clear_color(0.0, 0.0, 0.0, 0.0);
-
-    // building the framebuffer
-    let mut framebuffer =
-        glium::framebuffer::SimpleFrameBuffer::new(&display, &iteration_texture).unwrap();
-
-    let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
-
-    framebuffer
-        .draw(
-            &vertex_buffer,
-            &indices,
-            &program,
-            &draw_params,
-            &Default::default(),
-        )
-        .unwrap();
-
-    display.assert_no_error(None);
-
-    let p: Vec<Vec<(u32, u32)>> = unsafe { iteration_texture.unchecked_read() };
-
-    let mut p: Vec<_> = p
-        .into_iter()
-        .flatten()
-        .filter(|b| b.1 != 1)
-        .map(|b| b.0)
-        .collect();
-    p.sort_unstable();
-
-    draw_params.ranges = [
-        p[0],
-        p[p.len() * 3 / 4 - 1],
-        p[p.len() * 7 / 8 - 1],
-        *p.last().unwrap(),
-    ];
-
-    eprintln!("{:?}", draw_params.ranges);
-
-    let program = Program::from_source(
+    let program_step_2 = Program::from_source(
         &display,
         r##"#version 140
 in vec2 position;
@@ -162,10 +113,67 @@ void main() {
     )
     .unwrap();
 
+    let iteration_texture = UnsignedTexture2d::empty_with_format(
+        &display,
+        glium::texture::UncompressedUintFormat::U32U32,
+        glium::texture::MipmapsOption::NoMipmap,
+        1024,
+        768,
+    ).unwrap();
+
     event_loop.run(move |ev, _, control_flow| {
         *control_flow = Wait;
 
         match ev {
+            Event::RedrawRequested(_) => {
+                let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
+
+                // building the framebuffer
+                let mut framebuffer =
+                    glium::framebuffer::SimpleFrameBuffer::new(&display, &iteration_texture).unwrap();
+
+                framebuffer
+                    .draw(
+                        &vertex_buffer,
+                        &indices,
+                        &program,
+                        &draw_params,
+                        &Default::default(),
+                    )
+                    .unwrap();
+
+                let p: Vec<Vec<(u32, u32)>> = unsafe { iteration_texture.unchecked_read() };
+
+                let mut p: Vec<_> = p
+                    .into_iter()
+                    .flatten()
+                    .filter(|b| b.1 != 1)
+                    .map(|b| b.0)
+                    .collect();
+                p.sort_unstable();
+
+                draw_params.ranges = [
+                    p[0],
+                    p[p.len() * 3 / 4 - 1],
+                    p[p.len() * 7 / 8 - 1],
+                    *p.last().unwrap(),
+                ];
+
+                eprintln!("{:?}", draw_params.ranges);
+
+                let mut target = display.draw();
+                target.clear_color(255.0, 255.0, 255.0, 1.0);
+                target
+                    .draw(
+                        &vertex_buffer,
+                        &indices,
+                        &program_step_2,
+                        &draw_params,
+                        &Default::default(),
+                    )
+                    .unwrap();
+                target.finish().unwrap();
+            }
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::CloseRequested => {
                     *control_flow = ControlFlow::Exit;
@@ -175,18 +183,5 @@ void main() {
             },
             _ => (),
         }
-
-        let mut target = display.draw();
-        target.clear_color(255.0, 255.0, 255.0, 1.0);
-        target
-            .draw(
-                &vertex_buffer,
-                &indices,
-                &program,
-                &draw_params,
-                &Default::default(),
-            )
-            .unwrap();
-        target.finish().unwrap();
     });
 }
