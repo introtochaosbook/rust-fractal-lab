@@ -119,7 +119,7 @@ void main() {
 
     let iteration_texture = UnsignedTexture2d::empty_with_format(
         &display,
-        glium::texture::UncompressedUintFormat::U32,
+        glium::texture::UncompressedUintFormat::U32U32,
         glium::texture::MipmapsOption::NoMipmap,
         1024,
         768,
@@ -152,42 +152,57 @@ void main() {
 
     event_loop.run(move |ev, _, control_flow| {
         tenants.with_mut(|fields| {
-            let framebuffer = &mut fields.buffs.0;
-            let dt = fields.dt;
-
-            framebuffer.draw(
-                &vertex_buffer,
-                &indices,
-                &program,
-                &draw_params,
-                &Default::default(),
-            )
-                .unwrap();
-
-            display.assert_no_error(None);
-
-            let p: Vec<Vec<(u32, u32)>> = unsafe { dt.iteration_texture.unchecked_read() };
-
-            let mut p: Vec<_> = p
-                .into_iter()
-                .flatten()
-                .filter(|b| b.1 != 1)
-                .map(|b| b.0)
-                .collect();
-            p.sort_unstable();
-
-            draw_params.ranges = [
-                p[0],
-                p[p.len() * 3 / 4 - 1],
-                p[p.len() * 7 / 8 - 1],
-                *p.last().unwrap(),
-            ];
-
-            eprintln!("{:?}", draw_params.ranges);
-
             *control_flow = Wait;
 
             match ev {
+                Event::RedrawRequested(_) => {
+                    let framebuffer = &mut fields.buffs.0;
+                    let dt = fields.dt;
+
+                    framebuffer.draw(
+                        &vertex_buffer,
+                        &indices,
+                        &program,
+                        &draw_params,
+                        &Default::default(),
+                    )
+                        .unwrap();
+
+                    display.assert_no_error(None);
+
+                    let p: Vec<Vec<(u32, u32)>> = unsafe { dt.iteration_texture.unchecked_read() };
+
+                    let mut p: Vec<_> = p
+                        .into_iter()
+                        .flatten()
+                        .filter(|b| b.1 != 1)
+                        .map(|b| b.0)
+                        .collect();
+                    p.sort_unstable();
+
+                    draw_params.ranges = [
+                        p[0],
+                        p[p.len() * 3 / 4 - 1],
+                        p[p.len() * 7 / 8 - 1],
+                        *p.last().unwrap(),
+                    ];
+
+                    eprintln!("{:?}", draw_params.ranges);
+
+                    let mut target = display.draw();
+                    dt.color_texture.sync_shader_writes_for_surface();
+                    dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
+                    // target
+                    //     .draw(
+                    //         &vertex_buffer,
+                    //         &indices,
+                    //         &program,
+                    //         &draw_params,
+                    //         &Default::default(),
+                    //     )
+                    //     .unwrap();
+                    target.finish().unwrap();
+                }
                 Event::WindowEvent { event, .. } => match event {
                     WindowEvent::CloseRequested => {
                         *control_flow = ControlFlow::Exit;
@@ -197,20 +212,6 @@ void main() {
                 },
                 _ => (),
             }
-
-            let mut target = display.draw();
-            dt.color_texture.sync_shader_writes_for_surface();
-            dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
-            // target
-            //     .draw(
-            //         &vertex_buffer,
-            //         &indices,
-            //         &program,
-            //         &draw_params,
-            //         &Default::default(),
-            //     )
-            //     .unwrap();
-            target.finish().unwrap();
         });
     });
 }
