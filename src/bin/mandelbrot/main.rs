@@ -2,7 +2,7 @@
 
 use crate::ControlFlow::Wait;
 use glium::framebuffer::{ColorAttachment, MultiOutputFrameBuffer, ToColorAttachment};
-use glium::glutin::dpi::LogicalSize;
+use glium::glutin::dpi::{LogicalSize, PhysicalSize};
 use glium::glutin::event::{DeviceEvent, Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
@@ -85,11 +85,10 @@ fn main() {
     let event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
-        .with_inner_size(LogicalSize::new(1024.0, 768.0))
+        .with_inner_size(PhysicalSize::new(1024.0, 768.0))
         .with_title("Hello world");
 
     let cb = ContextBuilder::new();
-
     let display = Display::new(wb, cb, &event_loop).unwrap();
 
     let vertices: [Vertex; 6] = [
@@ -130,11 +129,9 @@ void main() {
         .as_surface()
         .clear_color(0.0, 0.0, 0.0, 0.0);
 
-    let color_texture = Texture2d::empty_with_format(
-        &display, glium::texture::UncompressedFloatFormat::U8U8U8U8,
-        glium::texture::MipmapsOption::NoMipmap, 1024, 768
+    let color_texture = Texture2d::empty(
+        &display, 1024, 768
     ).unwrap();
-
 
     let mut tenants = DataBuilder {
         dt: Dt {
@@ -148,6 +145,8 @@ void main() {
         }
     }.build();
 
+    let dim = display.get_framebuffer_dimensions();
+    eprintln!("{:?}", dim);
     let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
 
     event_loop.run(move |ev, _, control_flow| {
@@ -190,7 +189,6 @@ void main() {
                     eprintln!("{:?}", draw_params.ranges);
 
                     let mut target = display.draw();
-                    dt.color_texture.sync_shader_writes_for_surface();
                     dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
                     // target
                     //     .draw(
