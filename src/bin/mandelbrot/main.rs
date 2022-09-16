@@ -86,6 +86,7 @@ fn main() {
 
     let wb = WindowBuilder::new()
         .with_inner_size(PhysicalSize::new(1024.0, 768.0))
+        .with_resizable(false)
         .with_title("Hello world");
 
     let cb = ContextBuilder::new();
