@@ -1,9 +1,9 @@
 // Initial code based on https://github.com/remexre/mandelbrot-rust-gl
 
-use crate::ControlFlow::Wait;
+use crate::ControlFlow::{Wait, WaitUntil};
 use glium::framebuffer::{ColorAttachment, MultiOutputFrameBuffer, ToColorAttachment};
 use glium::glutin::dpi::{LogicalSize, PhysicalSize};
-use glium::glutin::event::{DeviceEvent, Event, WindowEvent};
+use glium::glutin::event::{DeviceEvent, Event, StartCause, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
@@ -16,7 +16,9 @@ use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 use std::borrow::Borrow;
 use std::cell::RefCell;
+use std::ops::Add;
 use std::rc::Rc;
+use std::time::{Duration, Instant};
 use glium::program::ShaderStage;
 
 use ouroboros::self_referencing;
@@ -45,6 +47,7 @@ struct DrawParams {
     height: f32,
     max_colors: u32,
     ranges: [u32; 4],
+    ranges_2: [u32; 4],
     color: String,
 }
 
@@ -57,8 +60,9 @@ impl DrawParams {
             y_max: 1.0,
             width: dims.0 as f32,
             height: dims.1 as f32,
-            max_colors: 256,
+            max_colors: 1024,
             ranges: [0; 4],
+            ranges_2: [0; 4],
             color: "ColorInferno".into(),
         }
     }
@@ -74,6 +78,7 @@ impl Uniforms for DrawParams {
         f("height", UniformValue::Float(self.height));
         f("maxColors", UniformValue::UnsignedInt(self.max_colors));
         f("ranges", UniformValue::UnsignedIntVec4(self.ranges));
+        f("ranges_2", UniformValue::UnsignedIntVec4(self.ranges_2));
         f(
             "Color",
             UniformValue::Subroutine(ShaderStage::Fragment, self.color.as_str()),
@@ -152,10 +157,10 @@ void main() {
 
     event_loop.run(move |ev, _, control_flow| {
         tenants.with_mut(|fields| {
-            *control_flow = Wait;
+            *control_flow = ControlFlow::WaitUntil(Instant::now().add(Duration::from_millis(100)));
 
             match ev {
-                Event::RedrawRequested(_) => {
+                Event::RedrawRequested(_) | Event::NewEvents(StartCause::ResumeTimeReached {..}) => {
                     let framebuffer = &mut fields.buffs.0;
                     let dt = fields.dt;
 
@@ -182,24 +187,23 @@ void main() {
 
                     draw_params.ranges = [
                         p[0],
-                        p[p.len() * 3 / 4 - 1],
-                        p[p.len() * 7 / 8 - 1],
+                        p[p.len() * 1 / 7 - 1] + 1,
+                        p[p.len() * 2 / 7 - 1] + 2,
+                        p[p.len() * 3 / 7 - 1] + 3,
+                    ];
+
+                    draw_params.ranges_2 = [
+                        p[p.len() * 4 / 7 - 1] + 3,
+                        p[p.len() * 5 / 7 - 1] + 3,
+                        p[p.len() * 6 / 7 - 1],
                         *p.last().unwrap(),
                     ];
 
                     eprintln!("{:?}", draw_params.ranges);
+                    eprintln!("{:?}", draw_params.ranges_2);
 
-                    let mut target = display.draw();
+                    let target = display.draw();
                     dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
-                    // target
-                    //     .draw(
-                    //         &vertex_buffer,
-                    //         &indices,
-                    //         &program,
-                    //         &draw_params,
-                    //         &Default::default(),
-                    //     )
-                    //     .unwrap();
                     target.finish().unwrap();
                 }
                 Event::WindowEvent { event, .. } => match event {

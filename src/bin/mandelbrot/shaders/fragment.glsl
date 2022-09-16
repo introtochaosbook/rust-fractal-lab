@@ -15,32 +15,32 @@ uniform float width;
 uniform uint maxColors;
 
 uniform uvec4 ranges;
+uniform uvec4 ranges_2;
 
 // <inject:complex.glsl>
 // <inject:colors.glsl>
 
+uint get_ranges_value(uint index) {
+    if (index < 4u) {
+        return ranges[index];
+    }
+
+    return ranges_2[index];
+}
+
 vec3 get_color(uint iterations) {
-    vec3 color_0 = Color(0.0);
-    vec3 color_1 = Color(0.5);
-    vec3 color_2 = Color(0.75);
-    vec3 color_3 = Color(1.0);
+    vec3 colors[8] = { Color(0.0), Color(1.0 / 7.0), Color(2.0 / 7.0), Color(3.0 / 7.0), Color(4.0 / 7.0), Color(5.0 / 7.0), Color(6.0 / 7.0), Color(1.0) };
 
     float fraction = 0.0f;
-    if (iterations < ranges[1])
-    {
-        fraction = float(iterations - ranges[0]) / float(ranges[1] - ranges[0]);
-        return mix(color_0, color_1, fraction);
+    for (uint i = 1u; i < 8u; i++) {
+        if (iterations < get_ranges_value(i)) {
+            fraction = float(iterations - get_ranges_value(i - 1u)) / float(get_ranges_value(i) - get_ranges_value(i - 1u));
+            return mix(colors[i - 1u], colors[i], fraction);
+        }
     }
-    else if(iterations < ranges[2])
-    {
-        fraction = float(iterations - ranges[1]) / float(ranges[2] - ranges[1]);
-        return mix(color_1, color_2, fraction);
-    }
-    else
-    {
-        fraction = float(iterations - ranges[2]) / float(ranges[3] - ranges[2]);
-        return mix(color_2, color_3, fraction);
-    }
+
+    fraction = float(iterations - get_ranges_value(6u)) / float(get_ranges_value(7u) - get_ranges_value(6u));
+    return mix(colors[6], colors[7], fraction);
 }
 
 void main() {
