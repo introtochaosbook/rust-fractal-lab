@@ -47,14 +47,29 @@ fn map_f32(x: f32, in_min: f32, in_max: f32, out_min: f32, out_max: f32) -> f32 
     (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 }
 
-#[derive(Default)]
 pub struct IfsProgram {
     uniforms: MapParams,
     vertices: Vec<ColoredVertex>,
     normalized_vertices: Vec<ColoredVertex>,
+    clear_color: (f32, f32, f32, f32),
+}
+
+impl Default for IfsProgram {
+    fn default() -> Self {
+        Self {
+            uniforms: MapParams::default(),
+            vertices: vec![],
+            normalized_vertices: vec![],
+            clear_color: (255.0, 255.0, 255.0, 1.0),
+        }
+    }
 }
 
 impl IfsProgram {
+    pub fn set_clear_color(&mut self, color: (f32, f32, f32, f32)) {
+        self.clear_color = color;
+    }
+
     pub fn normalize_points(&mut self) {
         self.normalize_points_to_ranges(-1.0, 1.0, -1.0, 1.0);
     }
@@ -224,6 +239,7 @@ void main() {
             .unwrap();
 
         let uniforms = self.uniforms;
+        let clear_color = self.clear_color;
         event_loop.run(move |ev, _, control_flow| {
             *control_flow = Wait;
 
@@ -239,7 +255,7 @@ void main() {
             }
 
             let mut target = display.draw();
-            target.clear_color(255.0, 255.0, 255.0, 1.0);
+            target.clear(None, Some(clear_color), false, None, None);
 
             let mut p = DrawParameters::default();
             p.point_size = point_size;
