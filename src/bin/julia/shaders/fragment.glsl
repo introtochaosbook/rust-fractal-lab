@@ -78,6 +78,13 @@ vec2 FCloud(vec2 z) {
     return z;
 }
 
+subroutine(f_t)
+vec2 FSnowflakes(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(0.11031, 0.67037));
+    return z;
+}
+
 subroutine vec4 special_color_mode_t(uint i);
 subroutine uniform special_color_mode_t SpecialColorMode;
 
@@ -97,6 +104,17 @@ vec4 SpecialColorModeCloud(uint i) {
         // white
         default: return vec4(1, 1, 1, 1);
     }
+}
+
+subroutine(special_color_mode_t)
+vec4 SpecialColorModeSnowflakes(uint i) {
+    if (i >= 8u) {
+        return vec4(0, 0, 0, 1);
+    } else if (i >= 12u) {
+        return vec4(1, 1, 1, 1);
+    }
+
+    return vec4(0, 0, 0, 1);
 }
 
 void main() {

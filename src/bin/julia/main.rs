@@ -34,7 +34,7 @@ impl DrawParams {
             width: dims.0 as f32,
             height: dims.1 as f32,
             max_colors: 10,
-            f: "FCloud".into(),
+            f: "FSnowflakes".into(),
             color: "ColorInferno".into(),
         }
     }
@@ -60,6 +60,7 @@ impl Uniforms for DrawParams {
         f("SpecialColorMode", UniformValue::Subroutine(ShaderStage::Fragment, {
             match self.f.as_str() {
                 "FCloud" => "SpecialColorModeCloud",
+                "FSnowflakes" => "SpecialColorModeSnowflakes",
                 _ => "SpecialColorModeDefault",
             }
         }));
