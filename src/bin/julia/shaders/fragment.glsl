@@ -64,6 +64,13 @@ vec2 FFlower1(vec2 z) {
     return z;
 }
 
+subroutine(f_t)
+vec2 FFlower2(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(0.2541, 0.0));
+    return z;
+}
+
 void main() {
     vec2 z = vec2(
         xMin + (xMax - xMin) * (gl_FragCoord.x / width),

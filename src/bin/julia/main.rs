@@ -34,8 +34,8 @@ impl DrawParams {
             width: dims.0 as f32,
             height: dims.1 as f32,
             max_colors: 10,
-            f: "FFlower1".into(),
-            color: "ColorTurbo".into(),
+            f: "FFlower2".into(),
+            color: "ColorInferno".into(),
         }
     }
 }
