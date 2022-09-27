@@ -50,7 +50,7 @@ void main() {
     const float escape = 4.0;
     vec2 z = vec2(0, 0);
 
-    while (i++ < maxColors && mag < escape) {
+    while (i++ < maxColors * 2u && mag < escape) {
         z = complex_square(z) + c;
         mag = length(z);
     }

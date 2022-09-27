@@ -17,8 +17,8 @@ impl Vertex {
     }
 }
 
-impl Into<Vertex> for [f32; 2] {
-    fn into(self) -> Vertex {
-        Vertex { position: self }
+impl From<[f32; 2]> for Vertex {
+    fn from(x: [f32; 2]) -> Self {
+        Vertex { position: x }
     }
 }
