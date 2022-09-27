@@ -1,4 +1,4 @@
-// Initial code based on https://github.com/remexre/mandelbrot-rust-gl
+// Input handling and scaling code based on https://github.com/remexre/mandelbrot-rust-gl
 
 use std::time::{Duration, Instant};
 use glium::{Display, Program, Surface, Texture2d, VertexBuffer};
