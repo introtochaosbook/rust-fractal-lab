@@ -1,25 +1,22 @@
 // Initial code based on https://github.com/remexre/mandelbrot-rust-gl
 
-use crate::ControlFlow::Wait;
-use glium::framebuffer::{ColorAttachment, MultiOutputFrameBuffer, ToColorAttachment};
-use glium::glutin::dpi::{LogicalSize, PhysicalSize};
-use glium::glutin::event::{DeviceEvent, Event, WindowEvent};
+use glium::{Display, Program, Surface, Texture2d, VertexBuffer};
+use glium::framebuffer::{MultiOutputFrameBuffer, ToColorAttachment};
+use glium::glutin::ContextBuilder;
+use glium::glutin::dpi::PhysicalSize;
+use glium::glutin::event::{ElementState, Event, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
-use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
-use glium::pixel_buffer::PixelBuffer;
-use glium::texture::{Texture1d, UnsignedTexture2d};
-use glium::uniforms::{UniformValue, Uniforms};
-use glium::{Display, DrawParameters, Program, Surface, Texture2d, VertexBuffer};
-use rust_fractal_lab::shader_builder::build_shader;
-use rust_fractal_lab::vertex::Vertex;
-use std::borrow::Borrow;
-use std::cell::RefCell;
-use std::rc::Rc;
 use glium::program::ShaderStage;
+use glium::texture::UnsignedTexture2d;
+use glium::uniforms::{Uniforms, UniformValue};
 
 use ouroboros::self_referencing;
+use rust_fractal_lab::shader_builder::build_shader;
+use rust_fractal_lab::vertex::Vertex;
+
+use crate::ControlFlow::Wait;
 
 pub struct Dt {
     color_texture: Texture2d,
@@ -36,10 +33,10 @@ struct Data {
 
 #[derive(Debug)]
 struct DrawParams {
-    x_min: f32,
-    x_max: f32,
-    y_min: f32,
-    y_max: f32,
+    x_min: f64,
+    x_max: f64,
+    y_min: f64,
+    y_max: f64,
 
     width: f32,
     height: f32,
@@ -62,14 +59,49 @@ impl DrawParams {
             color: "ColorInferno".into(),
         }
     }
+
+    fn reset(&mut self) {
+        self.x_min = -2.0;
+        self.x_max = 1.0;
+        self.y_min = -1.0;
+        self.y_max = 1.0;
+    }
+    fn scroll(&mut self, x: f64, y: f64) {
+        let s_x = (self.x_max - self.x_min) / 10.0;
+        let s_y = (self.y_max - self.y_min) / 10.0;
+        self.x_min += x * s_x;
+        self.x_max += x * s_x;
+        self.y_min += y * s_y;
+        self.y_max += y * s_y;
+    }
+    fn pan(&mut self, x: f64, y: f64) {
+        self.scroll(x / 100.0,
+                    y / 100.0)
+    }
+    fn zoom_in(&mut self) {
+        let s_x = (self.x_max - self.x_min) / 10.0;
+        let s_y = (self.y_max - self.y_min) / 10.0;
+        self.x_min += s_x;
+        self.x_max -= s_x;
+        self.y_min += s_y;
+        self.y_max -= s_y;
+    }
+    fn zoom_out(&mut self) {
+        let s_x = (self.x_max - self.x_min) / 10.0;
+        let s_y = (self.y_max - self.y_min) / 10.0;
+        self.x_min -= s_x;
+        self.x_max += s_x;
+        self.y_min -= s_y;
+        self.y_max += s_y;
+    }
 }
 
 impl Uniforms for DrawParams {
     fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, mut f: F) {
-        f("xMin", UniformValue::Float(self.x_min));
-        f("xMax", UniformValue::Float(self.x_max));
-        f("yMin", UniformValue::Float(self.y_min));
-        f("yMax", UniformValue::Float(self.y_max));
+        f("xMin", UniformValue::Double(self.x_min));
+        f("xMax", UniformValue::Double(self.x_max));
+        f("yMin", UniformValue::Double(self.y_min));
+        f("yMax", UniformValue::Double(self.y_max));
         f("width", UniformValue::Float(self.width));
         f("height", UniformValue::Float(self.height));
         f("maxColors", UniformValue::UnsignedInt(self.max_colors));
@@ -150,6 +182,10 @@ void main() {
     eprintln!("{:?}", dim);
     let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
 
+    // Input variables.
+    let mut mouse_down = false;
+    let mut mouse_last = (0f64, 0f64);
+
     event_loop.run(move |ev, _, control_flow| {
         tenants.with_mut(|fields| {
             *control_flow = Wait;
@@ -189,26 +225,52 @@ void main() {
 
                     eprintln!("{:?}", draw_params.ranges);
 
-                    let mut target = display.draw();
+                    let target = display.draw();
                     dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
-                    // target
-                    //     .draw(
-                    //         &vertex_buffer,
-                    //         &indices,
-                    //         &program,
-                    //         &draw_params,
-                    //         &Default::default(),
-                    //     )
-                    //     .unwrap();
                     target.finish().unwrap();
                 }
-                Event::WindowEvent { event, .. } => match event {
-                    WindowEvent::CloseRequested => {
-                        *control_flow = ControlFlow::Exit;
-                        return;
+                Event::WindowEvent {
+                    event, ..
+                } => {
+                    match event {
+                        WindowEvent::MouseInput { state, button: MouseButton::Left, .. } => mouse_down = match state {
+                            ElementState::Pressed => true,
+                            ElementState::Released => false,
+                        },
+                        WindowEvent::CursorMoved { position, .. } => {
+                            if mouse_down {
+                                draw_params.pan(mouse_last.0 - position.x, mouse_last.1 - position.y);
+                            }
+                            mouse_last = (position.x, position.y);
+                        },
+                        WindowEvent::MouseWheel { phase: TouchPhase::Moved, delta: MouseScrollDelta::LineDelta(_x, y), .. } => {
+                            if y < 0.0 {
+                                draw_params.zoom_out()
+                            } else {
+                                draw_params.zoom_in()
+                            }
+                        }
+                        WindowEvent::KeyboardInput { input, .. } if input.state == ElementState::Pressed => {
+                            if let Some(keycode) = input.virtual_keycode {
+                                match keycode {
+                                    VirtualKeyCode::Minus => draw_params.zoom_out(),
+                                    VirtualKeyCode::Equals => draw_params.zoom_in(),
+                                    VirtualKeyCode::Space => draw_params.reset(),
+                                    VirtualKeyCode::Up => draw_params.scroll(0.0, -1.0),
+                                    VirtualKeyCode::Left => draw_params.scroll(-1.0, 0.0),
+                                    VirtualKeyCode::Right => draw_params.scroll(1.0, 0.0),
+                                    VirtualKeyCode::Down => draw_params.scroll(0.0, 1.0),
+                                    _ => {}
+                                }
+                            }
+                        },
+                        WindowEvent::CloseRequested => {
+                            *control_flow = ControlFlow::Exit;
+                            return;
+                        }
+                        _ => { }
                     }
-                    _ => return,
-                },
+                }
                 _ => (),
             }
         });
