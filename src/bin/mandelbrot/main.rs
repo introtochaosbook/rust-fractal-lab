@@ -191,8 +191,6 @@ void main() {
     let mut mouse_down = false;
     let mut mouse_last = (0f64, 0f64);
 
-    let mut toggle = true;
-
     event_loop.run(move |ev, _, control_flow| {
         *control_flow = WaitUntil(Instant::now() + Duration::from_millis(100));
 
@@ -282,8 +280,24 @@ void main() {
 
             eprintln!("{:?}", draw_params.ranges);
 
-            let target = display.draw();
-            dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
+            let mut target = display.draw();
+
+            if cfg!(windows) {
+                // Blit the pixels to the surface
+                dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
+            } else {
+                // TODO: at least on Ubuntu on VMware, blitting doesn't seem to be supported
+                // Workaround for Linux: re-execute the shader, this time targeting the surface
+                target.draw(
+                    &vertex_buffer,
+                    &indices,
+                    &program,
+                    &draw_params,
+                    &Default::default(),
+                )
+                    .unwrap();
+            }
+
             target.finish().unwrap();
         });
     });
