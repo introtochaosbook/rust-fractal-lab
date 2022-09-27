@@ -1,13 +1,14 @@
 #version 330
 #extension GL_ARB_shader_subroutine : require
+#extension GL_ARB_gpu_shader_fp64 : require
 
 out vec4 color;
 out uvec2 depth;
 
-uniform float xMin;
-uniform float xMax;
-uniform float yMin;
-uniform float yMax;
+uniform double xMin;
+uniform double xMax;
+uniform double yMin;
+uniform double yMax;
 
 uniform float height;
 uniform float width;

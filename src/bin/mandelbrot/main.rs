@@ -1,5 +1,6 @@
 // Initial code based on https://github.com/remexre/mandelbrot-rust-gl
 
+use std::time::{Duration, Instant};
 use glium::{Display, Program, Surface, Texture2d, VertexBuffer};
 use glium::framebuffer::{MultiOutputFrameBuffer, ToColorAttachment};
 use glium::glutin::ContextBuilder;
@@ -16,7 +17,7 @@ use ouroboros::self_referencing;
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 
-use crate::ControlFlow::Wait;
+use crate::ControlFlow::{Wait, WaitUntil};
 
 pub struct Dt {
     color_texture: Texture2d,
@@ -66,6 +67,7 @@ impl DrawParams {
         self.y_min = -1.0;
         self.y_max = 1.0;
     }
+
     fn scroll(&mut self, x: f64, y: f64) {
         let s_x = (self.x_max - self.x_min) / 10.0;
         let s_y = (self.y_max - self.y_min) / 10.0;
@@ -74,10 +76,12 @@ impl DrawParams {
         self.y_min += y * s_y;
         self.y_max += y * s_y;
     }
+
     fn pan(&mut self, x: f64, y: f64) {
         self.scroll(x / 100.0,
                     y / 100.0)
     }
+
     fn zoom_in(&mut self) {
         let s_x = (self.x_max - self.x_min) / 10.0;
         let s_y = (self.y_max - self.y_min) / 10.0;
@@ -86,6 +90,7 @@ impl DrawParams {
         self.y_min += s_y;
         self.y_max -= s_y;
     }
+
     fn zoom_out(&mut self) {
         let s_x = (self.x_max - self.x_min) / 10.0;
         let s_y = (self.y_max - self.y_min) / 10.0;
@@ -147,7 +152,7 @@ void main() {
         &build_shader(include_str!("shaders/fragment.glsl")),
         None,
     )
-    .unwrap();
+        .unwrap();
 
     let iteration_texture = UnsignedTexture2d::empty_with_format(
         &display,
@@ -156,14 +161,14 @@ void main() {
         1024,
         768,
     )
-    .unwrap();
+        .unwrap();
 
     iteration_texture
         .as_surface()
         .clear_color(0.0, 0.0, 0.0, 0.0);
 
     let color_texture = Texture2d::empty(
-        &display, 1024, 768
+        &display, 1024, 768,
     ).unwrap();
 
     let mut tenants = DataBuilder {
@@ -172,10 +177,10 @@ void main() {
             iteration_texture,
         },
         buffs_builder: |dt| {
-            let output =  [("color", dt.color_texture.to_color_attachment()), ("depth", dt.iteration_texture.to_color_attachment())];
+            let output = [("color", dt.color_texture.to_color_attachment()), ("depth", dt.iteration_texture.to_color_attachment())];
             let framebuffer = MultiOutputFrameBuffer::new(&display, output).unwrap();
             (framebuffer, dt)
-        }
+        },
     }.build();
 
     let dim = display.get_framebuffer_dimensions();
@@ -186,93 +191,100 @@ void main() {
     let mut mouse_down = false;
     let mut mouse_last = (0f64, 0f64);
 
+    let mut toggle = true;
+
     event_loop.run(move |ev, _, control_flow| {
-        tenants.with_mut(|fields| {
-            *control_flow = Wait;
+        *control_flow = WaitUntil(Instant::now() + Duration::from_millis(100));
 
-            match ev {
-                Event::RedrawRequested(_) => {
-                    let framebuffer = &mut fields.buffs.0;
-                    let dt = fields.dt;
-
-                    framebuffer.draw(
-                        &vertex_buffer,
-                        &indices,
-                        &program,
-                        &draw_params,
-                        &Default::default(),
-                    )
-                        .unwrap();
-
-                    display.assert_no_error(None);
-
-                    let p: Vec<Vec<(u32, u32)>> = unsafe { dt.iteration_texture.unchecked_read() };
-
-                    let mut p: Vec<_> = p
-                        .into_iter()
-                        .flatten()
-                        .filter(|b| b.1 != 1)
-                        .map(|b| b.0)
-                        .collect();
-                    p.sort_unstable();
-
-                    draw_params.ranges = [
-                        p[0],
-                        p[p.len() * 3 / 4 - 1],
-                        p[p.len() * 7 / 8 - 1],
-                        *p.last().unwrap(),
-                    ];
-
-                    eprintln!("{:?}", draw_params.ranges);
-
-                    let target = display.draw();
-                    dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
-                    target.finish().unwrap();
-                }
-                Event::WindowEvent {
-                    event, ..
-                } => {
-                    match event {
-                        WindowEvent::MouseInput { state, button: MouseButton::Left, .. } => mouse_down = match state {
-                            ElementState::Pressed => true,
-                            ElementState::Released => false,
-                        },
-                        WindowEvent::CursorMoved { position, .. } => {
-                            if mouse_down {
-                                draw_params.pan(mouse_last.0 - position.x, mouse_last.1 - position.y);
-                            }
-                            mouse_last = (position.x, position.y);
-                        },
-                        WindowEvent::MouseWheel { phase: TouchPhase::Moved, delta: MouseScrollDelta::LineDelta(_x, y), .. } => {
-                            if y < 0.0 {
-                                draw_params.zoom_out()
-                            } else {
-                                draw_params.zoom_in()
-                            }
+        match ev {
+            Event::RedrawRequested(_) => {}
+            Event::WindowEvent {
+                event, ..
+            } => {
+                match event {
+                    WindowEvent::MouseInput { state, button: MouseButton::Left, .. } => mouse_down = match state {
+                        ElementState::Pressed => true,
+                        ElementState::Released => false,
+                    },
+                    WindowEvent::CursorMoved { position, .. } => {
+                        if mouse_down {
+                            draw_params.pan(mouse_last.0 - position.x, position.y - mouse_last.1);
                         }
-                        WindowEvent::KeyboardInput { input, .. } if input.state == ElementState::Pressed => {
-                            if let Some(keycode) = input.virtual_keycode {
-                                match keycode {
-                                    VirtualKeyCode::Minus => draw_params.zoom_out(),
-                                    VirtualKeyCode::Equals => draw_params.zoom_in(),
-                                    VirtualKeyCode::Space => draw_params.reset(),
-                                    VirtualKeyCode::Up => draw_params.scroll(0.0, -1.0),
-                                    VirtualKeyCode::Left => draw_params.scroll(-1.0, 0.0),
-                                    VirtualKeyCode::Right => draw_params.scroll(1.0, 0.0),
-                                    VirtualKeyCode::Down => draw_params.scroll(0.0, 1.0),
-                                    _ => {}
-                                }
-                            }
-                        },
-                        WindowEvent::CloseRequested => {
-                            *control_flow = ControlFlow::Exit;
+
+                        mouse_last = (position.x, position.y);
+
+                        if !mouse_down {
                             return;
                         }
-                        _ => { }
                     }
+                    WindowEvent::MouseWheel { phase: TouchPhase::Moved, delta: MouseScrollDelta::LineDelta(_x, y), .. } => {
+                        if y < 0.0 {
+                            draw_params.zoom_out()
+                        } else {
+                            draw_params.zoom_in()
+                        }
+                    }
+                    WindowEvent::KeyboardInput { input, .. } if input.state == ElementState::Pressed => {
+                        if let Some(keycode) = input.virtual_keycode {
+                            match keycode {
+                                VirtualKeyCode::Minus => draw_params.zoom_out(),
+                                VirtualKeyCode::Equals => draw_params.zoom_in(),
+                                VirtualKeyCode::Space => draw_params.reset(),
+                                VirtualKeyCode::Up => draw_params.scroll(0.0, -1.0),
+                                VirtualKeyCode::Left => draw_params.scroll(-1.0, 0.0),
+                                VirtualKeyCode::Right => draw_params.scroll(1.0, 0.0),
+                                VirtualKeyCode::Down => draw_params.scroll(0.0, 1.0),
+                                _ => {}
+                            }
+                        }
+                    }
+                    WindowEvent::CloseRequested => {
+                        *control_flow = ControlFlow::Exit;
+                        return;
+                    }
+                    _ => {}
                 }
-                _ => (),
             }
+            _ => return,
+        }
+
+        tenants.with_mut(|fields| {
+            let framebuffer = &mut fields.buffs.0;
+            let dt = fields.dt;
+
+            framebuffer.draw(
+                &vertex_buffer,
+                &indices,
+                &program,
+                &draw_params,
+                &Default::default(),
+            )
+                .unwrap();
+
+            display.assert_no_error(None);
+
+            let p: Vec<Vec<(u32, u32)>> = unsafe { dt.iteration_texture.unchecked_read() };
+
+            let mut p: Vec<_> = p
+                .into_iter()
+                .flatten()
+                .filter(|b| b.1 != 1)
+                .map(|b| b.0)
+                .collect();
+            p.sort_unstable();
+
+            draw_params.ranges = [
+                p[0],
+                p[p.len() * 3 / 4 - 1],
+                p[p.len() * 7 / 8 - 1],
+                *p.last().unwrap(),
+            ];
+
+            eprintln!("{:?}", draw_params.ranges);
+
+            let target = display.draw();
+            dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
+            target.finish().unwrap();
         });
     });
 }
