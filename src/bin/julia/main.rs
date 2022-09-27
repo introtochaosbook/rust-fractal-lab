@@ -34,7 +34,7 @@ impl DrawParams {
             width: dims.0 as f32,
             height: dims.1 as f32,
             max_colors: 10,
-            f: "FSnowflakes".into(),
+            f: "FDendrite".into(),
             color: "ColorInferno".into(),
         }
     }
