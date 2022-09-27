@@ -92,6 +92,13 @@ vec2 FDendrite(vec2 z) {
     return z;
 }
 
+subroutine(f_t)
+vec2 FEkg(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(-1.5, 0.0));
+    return z;
+}
+
 subroutine vec4 special_color_mode_t(uint i);
 subroutine uniform special_color_mode_t SpecialColorMode;
 
