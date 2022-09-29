@@ -256,10 +256,10 @@ void main() {
                         p.sort_unstable();
 
                         draw_params.ranges = [
-                            p[0],
-                            p[p.len() * 3 / 4 - 1],
-                            p[p.len() * 7 / 8 - 1],
-                            *p.last().unwrap(),
+                            p.get(0).copied().unwrap_or_default(),
+                            p.get((p.len() * 3 / 4).saturating_sub(1)).copied().unwrap_or_default(),
+                            p.get((p.len() * 7 / 8).saturating_sub(1)).copied().unwrap_or_default(),
+                            p.last().copied().unwrap_or_default(),
                         ];
 
                         framebuffer.draw(
