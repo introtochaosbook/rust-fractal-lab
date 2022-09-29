@@ -183,8 +183,8 @@ void main() {
         .as_surface()
         .clear_color(0.0, 0.0, 0.0, 0.0);
 
-    let color_texture = Texture2d::empty(
-        &main_display, 1024, 768,
+    let color_texture = Texture2d::empty_with_format(
+        &main_display, glium::texture::UncompressedFloatFormat::F16F16F16F16, glium::texture::MipmapsOption::NoMipmap, 1024, 768,
     ).unwrap();
 
     let mut tenants = DataBuilder {
