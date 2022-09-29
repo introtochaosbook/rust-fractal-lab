@@ -12,12 +12,15 @@ use glium::index::{NoIndices, PrimitiveType};
 use glium::program::ShaderStage;
 use glium::texture::UnsignedTexture2d;
 use glium::uniforms::{Uniforms, UniformValue};
+use imgui::{Condition, Context};
+use imgui_glium_renderer::Renderer;
+use imgui_winit_support::{HiDpiMode, WinitPlatform};
 
 use ouroboros::self_referencing;
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 
-use crate::ControlFlow::{Wait, WaitUntil};
+use crate::ControlFlow::Wait;
 
 pub struct Dt {
     color_texture: Texture2d,
@@ -57,7 +60,7 @@ impl DrawParams {
             height: dims.1 as f32,
             max_colors: 256,
             ranges: [0; 4],
-            color: "ColorInferno".into(),
+            color: "ColorTurbo".into(),
         }
     }
 
@@ -129,6 +132,15 @@ fn main() {
     let cb = ContextBuilder::new();
     let display = Display::new(wb, cb, &event_loop).unwrap();
 
+    let mut imgui = Context::create();
+    imgui.set_ini_filename(None);
+
+    let mut platform = WinitPlatform::init(&mut imgui);
+    let gl_window = display.gl_window();
+    let window = gl_window.window();
+    platform.attach_window(imgui.io_mut(), window, HiDpiMode::Default);
+    drop(gl_window);
+
     let vertices: [Vertex; 6] = [
         [1.0, -1.0].into(),
         [-1.0, 1.0].into(),
@@ -191,12 +203,117 @@ void main() {
     let mut mouse_down = false;
     let mut mouse_last = (0f64, 0f64);
 
-    event_loop.run(move |ev, _, control_flow| {
-        *control_flow = WaitUntil(Instant::now() + Duration::from_millis(100));
+    let mut renderer = Renderer::init(&mut imgui, &display).expect("Failed to initialize renderer");
+    let mut last_frame = Instant::now();
 
-        match ev {
-            Event::RedrawRequested(_) => {}
-            Event::WindowEvent {
+    let mut a = 1f32;
+
+    event_loop.run(move |ev, _, control_flow| {
+        *control_flow = Wait;
+
+        match &ev {
+            Event::NewEvents(_) => {
+                let now = Instant::now();
+                imgui.io_mut().update_delta_time(now - last_frame);
+                last_frame = now;
+            }
+            Event::MainEventsCleared => {
+                let gl_window = display.gl_window();
+                platform
+                    .prepare_frame(imgui.io_mut(), gl_window.window())
+                    .expect("Failed to prepare frame");
+                gl_window.window().request_redraw();
+            },
+            Event::RedrawRequested(_) => {
+                tenants.with_mut(|fields| {
+                    let framebuffer = &mut fields.buffs.0;
+                    let dt = fields.dt;
+
+                    framebuffer.draw(
+                        &vertex_buffer,
+                        &indices,
+                        &program,
+                        &draw_params,
+                        &Default::default(),
+                    )
+                        .unwrap();
+
+                    display.assert_no_error(None);
+
+                    let p: Vec<Vec<(u32, u32)>> = unsafe { dt.iteration_texture.unchecked_read() };
+
+                    let mut p: Vec<_> = p
+                        .into_iter()
+                        .flatten()
+                        .filter(|b| b.1 != 1)
+                        .map(|b| b.0)
+                        .collect();
+                    p.sort_unstable();
+
+                    draw_params.ranges = [
+                        p[0],
+                        p[p.len() * 3 / 4 - 1],
+                        p[p.len() * 7 / 8 - 1],
+                        *p.last().unwrap(),
+                    ];
+
+                    framebuffer.draw(
+                        &vertex_buffer,
+                        &indices,
+                        &program,
+                        &draw_params,
+                        &Default::default(),
+                    )
+                        .unwrap();
+
+                    eprintln!("{:?}", draw_params.ranges);
+
+                    let ui = imgui.frame();
+
+                    ui.window("Controls")
+                        .size([300.0, 150.0], Condition::FirstUseEver)
+                        .position([600.0, 50.0], Condition::FirstUseEver)
+                        .build(|| {
+                            ui.slider("pan_hor", -2.0, 2.0, &mut a);
+                        });
+
+                    let mut target = display.draw();
+                    target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
+
+                    let gl_window = display.gl_window();
+
+                    platform.prepare_render(ui, gl_window.window());
+                    let draw_data = imgui.render();
+
+                    if cfg!(windows) {
+                        // Blit the pixels to the surface
+                        dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
+
+                        renderer
+                            .render(&mut target, draw_data)
+                            .expect("Rendering failed");
+                    } else {
+                        // // TODO: at least on Ubuntu on VMware, blitting doesn't seem to be supported
+                        // // Workaround for Linux: re-execute the shader, this time targeting the surface
+                        //
+                        // renderer
+                        //     .render(&mut target, draw_data)
+                        //     .expect("Rendering failed");
+                        //
+                        // target.draw(
+                        //     &vertex_buffer,
+                        //     &indices,
+                        //     &program,
+                        //     &draw_params,
+                        //     &Default::default(),
+                        // )
+                        //     .unwrap();
+                    }
+
+                    target.finish().expect("Failed to swap buffers");
+                });
+            }
+            outer_event @ Event::WindowEvent {
                 event, ..
             } => {
                 match event {
@@ -216,7 +333,7 @@ void main() {
                         }
                     }
                     WindowEvent::MouseWheel { phase: TouchPhase::Moved, delta: MouseScrollDelta::LineDelta(_x, y), .. } => {
-                        if y < 0.0 {
+                        if *y < 0.0 {
                             draw_params.zoom_out()
                         } else {
                             draw_params.zoom_in()
@@ -240,65 +357,17 @@ void main() {
                         *control_flow = ControlFlow::Exit;
                         return;
                     }
-                    _ => {}
+                    _ => {
+                        let gl_window = display.gl_window();
+                        platform.handle_event(imgui.io_mut(), gl_window.window(), outer_event);
+                    }
                 }
+            },
+            event => {
+                let gl_window = display.gl_window();
+                platform.handle_event(imgui.io_mut(), gl_window.window(), &event);
             }
             _ => return,
         }
-
-        tenants.with_mut(|fields| {
-            let framebuffer = &mut fields.buffs.0;
-            let dt = fields.dt;
-
-            framebuffer.draw(
-                &vertex_buffer,
-                &indices,
-                &program,
-                &draw_params,
-                &Default::default(),
-            )
-                .unwrap();
-
-            display.assert_no_error(None);
-
-            let p: Vec<Vec<(u32, u32)>> = unsafe { dt.iteration_texture.unchecked_read() };
-
-            let mut p: Vec<_> = p
-                .into_iter()
-                .flatten()
-                .filter(|b| b.1 != 1)
-                .map(|b| b.0)
-                .collect();
-            p.sort_unstable();
-
-            draw_params.ranges = [
-                p[0],
-                p[p.len() * 3 / 4 - 1],
-                p[p.len() * 7 / 8 - 1],
-                *p.last().unwrap(),
-            ];
-
-            eprintln!("{:?}", draw_params.ranges);
-
-            let mut target = display.draw();
-
-            if cfg!(windows) {
-                // Blit the pixels to the surface
-                dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
-            } else {
-                // TODO: at least on Ubuntu on VMware, blitting doesn't seem to be supported
-                // Workaround for Linux: re-execute the shader, this time targeting the surface
-                target.draw(
-                    &vertex_buffer,
-                    &indices,
-                    &program,
-                    &draw_params,
-                    &Default::default(),
-                )
-                    .unwrap();
-            }
-
-            target.finish().unwrap();
-        });
     });
 }
