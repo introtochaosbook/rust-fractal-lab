@@ -130,16 +130,20 @@ fn main() {
         .with_title("Hello world");
 
     let cb = ContextBuilder::new();
-    let display = Display::new(wb, cb, &event_loop).unwrap();
+    let main_display = Display::new(wb, cb, &event_loop).unwrap();
+
+    let wb = WindowBuilder::new().with_title("Parameters");
+    let cb = ContextBuilder::new();
+    let params_display = Display::new(wb, cb, &event_loop).unwrap();
 
     let mut imgui = Context::create();
     imgui.set_ini_filename(None);
 
     let mut platform = WinitPlatform::init(&mut imgui);
-    let gl_window = display.gl_window();
-    let window = gl_window.window();
-    platform.attach_window(imgui.io_mut(), window, HiDpiMode::Default);
-    drop(gl_window);
+    let gl_params_window = params_display.gl_window();
+    let params_window = gl_params_window.window();
+    platform.attach_window(imgui.io_mut(), params_window, HiDpiMode::Default);
+    drop(gl_params_window);
 
     let vertices: [Vertex; 6] = [
         [1.0, -1.0].into(),
@@ -150,11 +154,11 @@ fn main() {
         [-1.0, 1.0].into(),
     ];
 
-    let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
+    let vertex_buffer = VertexBuffer::new(&main_display, &vertices).unwrap();
     let indices = NoIndices(PrimitiveType::TrianglesList);
 
     let program = Program::from_source(
-        &display,
+        &main_display,
         r##"#version 140
 in vec2 position;
 void main() {
@@ -167,7 +171,7 @@ void main() {
         .unwrap();
 
     let iteration_texture = UnsignedTexture2d::empty_with_format(
-        &display,
+        &main_display,
         glium::texture::UncompressedUintFormat::U32U32,
         glium::texture::MipmapsOption::NoMipmap,
         1024,
@@ -180,7 +184,7 @@ void main() {
         .clear_color(0.0, 0.0, 0.0, 0.0);
 
     let color_texture = Texture2d::empty(
-        &display, 1024, 768,
+        &main_display, 1024, 768,
     ).unwrap();
 
     let mut tenants = DataBuilder {
@@ -190,20 +194,20 @@ void main() {
         },
         buffs_builder: |dt| {
             let output = [("color", dt.color_texture.to_color_attachment()), ("depth", dt.iteration_texture.to_color_attachment())];
-            let framebuffer = MultiOutputFrameBuffer::new(&display, output).unwrap();
+            let framebuffer = MultiOutputFrameBuffer::new(&main_display, output).unwrap();
             (framebuffer, dt)
         },
     }.build();
 
-    let dim = display.get_framebuffer_dimensions();
+    let dim = main_display.get_framebuffer_dimensions();
     eprintln!("{:?}", dim);
-    let mut draw_params = DrawParams::new(display.get_framebuffer_dimensions());
+    let mut draw_params = DrawParams::new(main_display.get_framebuffer_dimensions());
 
     // Input variables.
     let mut mouse_down = false;
     let mut mouse_last = (0f64, 0f64);
 
-    let mut renderer = Renderer::init(&mut imgui, &display).expect("Failed to initialize renderer");
+    let mut renderer = Renderer::init(&mut imgui, &params_display).expect("Failed to initialize renderer");
     let mut last_frame = Instant::now();
 
     let mut a = 1f32;
@@ -218,11 +222,11 @@ void main() {
                 last_frame = now;
             }
             Event::MainEventsCleared => {
-                let gl_window = display.gl_window();
+                let gl_params_window = params_display.gl_window();
                 platform
-                    .prepare_frame(imgui.io_mut(), gl_window.window())
+                    .prepare_frame(imgui.io_mut(), gl_params_window.window())
                     .expect("Failed to prepare frame");
-                gl_window.window().request_redraw();
+                gl_params_window.window().request_redraw();
             },
             Event::RedrawRequested(_) => {
                 tenants.with_mut(|fields| {
@@ -238,7 +242,7 @@ void main() {
                     )
                         .unwrap();
 
-                    display.assert_no_error(None);
+                    main_display.assert_no_error(None);
 
                     let p: Vec<Vec<(u32, u32)>> = unsafe { dt.iteration_texture.unchecked_read() };
 
@@ -277,13 +281,16 @@ void main() {
                             ui.slider("pan_hor", -2.0, 2.0, &mut a);
                         });
 
-                    let mut target = display.draw();
-                    target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
+                    let gl_params_window = params_display.gl_window();
 
-                    let gl_window = display.gl_window();
-
-                    platform.prepare_render(ui, gl_window.window());
+                    platform.prepare_render(ui, gl_params_window.window());
                     let draw_data = imgui.render();
+
+                    let mut target = main_display.draw();
+                    //let mut params_target = params_display.draw();
+
+                    target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
+                    //params_target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
 
                     if cfg!(windows) {
                         // Blit the pixels to the surface
@@ -311,6 +318,7 @@ void main() {
                     }
 
                     target.finish().expect("Failed to swap buffers");
+                    //params_target.finish().expect("Failed to swap buffers");
                 });
             }
             outer_event @ Event::WindowEvent {
@@ -358,13 +366,13 @@ void main() {
                         return;
                     }
                     _ => {
-                        let gl_window = display.gl_window();
+                        let gl_window = main_display.gl_window();
                         platform.handle_event(imgui.io_mut(), gl_window.window(), outer_event);
                     }
                 }
             },
             event => {
-                let gl_window = display.gl_window();
+                let gl_window = main_display.gl_window();
                 platform.handle_event(imgui.io_mut(), gl_window.window(), &event);
             }
             _ => return,
