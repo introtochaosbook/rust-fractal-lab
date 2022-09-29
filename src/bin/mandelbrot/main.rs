@@ -228,49 +228,75 @@ void main() {
                     .expect("Failed to prepare frame");
                 gl_params_window.window().request_redraw();
             },
-            Event::RedrawRequested(_) => {
-                tenants.with_mut(|fields| {
-                    let framebuffer = &mut fields.buffs.0;
-                    let dt = fields.dt;
+            Event::RedrawRequested(window_id) => {
+                if *window_id == main_display.gl_window().window().id() {
+                    tenants.with_mut(|fields| {
+                        let framebuffer = &mut fields.buffs.0;
+                        let dt = fields.dt;
 
-                    framebuffer.draw(
-                        &vertex_buffer,
-                        &indices,
-                        &program,
-                        &draw_params,
-                        &Default::default(),
-                    )
-                        .unwrap();
+                        framebuffer.draw(
+                            &vertex_buffer,
+                            &indices,
+                            &program,
+                            &draw_params,
+                            &Default::default(),
+                        )
+                            .unwrap();
 
-                    main_display.assert_no_error(None);
+                        main_display.assert_no_error(None);
 
-                    let p: Vec<Vec<(u32, u32)>> = unsafe { dt.iteration_texture.unchecked_read() };
+                        let p: Vec<Vec<(u32, u32)>> = unsafe { dt.iteration_texture.unchecked_read() };
 
-                    let mut p: Vec<_> = p
-                        .into_iter()
-                        .flatten()
-                        .filter(|b| b.1 != 1)
-                        .map(|b| b.0)
-                        .collect();
-                    p.sort_unstable();
+                        let mut p: Vec<_> = p
+                            .into_iter()
+                            .flatten()
+                            .filter(|b| b.1 != 1)
+                            .map(|b| b.0)
+                            .collect();
+                        p.sort_unstable();
 
-                    draw_params.ranges = [
-                        p[0],
-                        p[p.len() * 3 / 4 - 1],
-                        p[p.len() * 7 / 8 - 1],
-                        *p.last().unwrap(),
-                    ];
+                        draw_params.ranges = [
+                            p[0],
+                            p[p.len() * 3 / 4 - 1],
+                            p[p.len() * 7 / 8 - 1],
+                            *p.last().unwrap(),
+                        ];
 
-                    framebuffer.draw(
-                        &vertex_buffer,
-                        &indices,
-                        &program,
-                        &draw_params,
-                        &Default::default(),
-                    )
-                        .unwrap();
+                        framebuffer.draw(
+                            &vertex_buffer,
+                            &indices,
+                            &program,
+                            &draw_params,
+                            &Default::default(),
+                        )
+                            .unwrap();
 
-                    eprintln!("{:?}", draw_params.ranges);
+                        eprintln!("{:?}", draw_params.ranges);
+
+                        let mut target = main_display.draw();
+                        target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
+
+                        if cfg!(windows) {
+                            // Blit the pixels to the surface
+                            dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
+                        } else {
+                            // TODO: at least on Ubuntu on VMware, blitting doesn't seem to be supported
+                            // Workaround for Linux: re-execute the shader, this time targeting the surface
+                            target.draw(
+                                &vertex_buffer,
+                                &indices,
+                                &program,
+                                &draw_params,
+                                &Default::default(),
+                            )
+                                .unwrap();
+                        }
+
+                        target.finish().expect("Failed to swap buffers");
+                    });
+                } else {
+                    let mut params_target = params_display.draw();
+                    params_target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
 
                     let ui = imgui.frame();
 
@@ -286,50 +312,28 @@ void main() {
                     platform.prepare_render(ui, gl_params_window.window());
                     let draw_data = imgui.render();
 
-                    let mut target = main_display.draw();
-                    //let mut params_target = params_display.draw();
+                    renderer
+                        .render(&mut params_target, draw_data)
+                        .expect("Rendering failed");
 
-                    target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
-                    //params_target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
-
-                    if cfg!(windows) {
-                        // Blit the pixels to the surface
-                        dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
-
-                        renderer
-                            .render(&mut target, draw_data)
-                            .expect("Rendering failed");
-                    } else {
-                        // // TODO: at least on Ubuntu on VMware, blitting doesn't seem to be supported
-                        // // Workaround for Linux: re-execute the shader, this time targeting the surface
-                        //
-                        // renderer
-                        //     .render(&mut target, draw_data)
-                        //     .expect("Rendering failed");
-                        //
-                        // target.draw(
-                        //     &vertex_buffer,
-                        //     &indices,
-                        //     &program,
-                        //     &draw_params,
-                        //     &Default::default(),
-                        // )
-                        //     .unwrap();
-                    }
-
-                    target.finish().expect("Failed to swap buffers");
-                    //params_target.finish().expect("Failed to swap buffers");
-                });
+                    params_target.finish().expect("Failed to swap buffers");
+                }
             }
-            outer_event @ Event::WindowEvent {
+            outer @ Event::WindowEvent { window_id, .. } if *window_id == params_display.gl_window().window().id() => {
+                let gl_window = params_display.gl_window();
+                platform.handle_event(imgui.io_mut(), gl_window.window(), &outer);
+            },
+            Event::WindowEvent {
                 event, ..
             } => {
+                dbg!(&event);
                 match event {
                     WindowEvent::MouseInput { state, button: MouseButton::Left, .. } => mouse_down = match state {
                         ElementState::Pressed => true,
                         ElementState::Released => false,
                     },
                     WindowEvent::CursorMoved { position, .. } => {
+                        main_display.gl_window().window().request_redraw();
                         if mouse_down {
                             draw_params.pan(mouse_last.0 - position.x, position.y - mouse_last.1);
                         }
@@ -341,6 +345,7 @@ void main() {
                         }
                     }
                     WindowEvent::MouseWheel { phase: TouchPhase::Moved, delta: MouseScrollDelta::LineDelta(_x, y), .. } => {
+                        main_display.gl_window().window().request_redraw();
                         if *y < 0.0 {
                             draw_params.zoom_out()
                         } else {
@@ -357,8 +362,10 @@ void main() {
                                 VirtualKeyCode::Left => draw_params.scroll(-1.0, 0.0),
                                 VirtualKeyCode::Right => draw_params.scroll(1.0, 0.0),
                                 VirtualKeyCode::Down => draw_params.scroll(0.0, 1.0),
-                                _ => {}
+                                _ => return,
                             }
+
+                            main_display.gl_window().window().request_redraw();
                         }
                     }
                     WindowEvent::CloseRequested => {
@@ -366,15 +373,10 @@ void main() {
                         return;
                     }
                     _ => {
-                        let gl_window = main_display.gl_window();
-                        platform.handle_event(imgui.io_mut(), gl_window.window(), outer_event);
+                        return;
                     }
                 }
             },
-            event => {
-                let gl_window = main_display.gl_window();
-                platform.handle_event(imgui.io_mut(), gl_window.window(), &event);
-            }
             _ => return,
         }
     });
