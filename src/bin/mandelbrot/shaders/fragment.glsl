@@ -25,11 +25,11 @@ uint get_ranges_value(uint index) {
         return ranges[index];
     }
 
-    return ranges_2[index];
+    return ranges_2[index - 4u];
 }
 
 vec3 get_color(uint iterations) {
-    vec3 colors[8] = { Color(0.0), Color(1.0 / 7.0), Color(2.0 / 7.0), Color(3.0 / 7.0), Color(4.0 / 7.0), Color(5.0 / 7.0), Color(6.0 / 7.0), Color(1.0) };
+    vec3 colors[8] = vec3[]( Color(0.0), Color(1.0 / 7.0), Color(2.0 / 7.0), Color(3.0 / 7.0), Color(4.0 / 7.0), Color(5.0 / 7.0), Color(6.0 / 7.0), Color(1.0) );
 
     float fraction = 0.0f;
     for (uint i = 1u; i < 8u; i++) {
