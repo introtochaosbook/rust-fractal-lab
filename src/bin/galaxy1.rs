@@ -1,6 +1,6 @@
 use ndarray::{array, Array, Ix2};
-use rust_fractal_lab::ifs::IfsProgram;
 use rand::Rng;
+use rust_fractal_lab::ifs::IfsProgram;
 
 fn main() {
     let d: Array<f32, Ix2> = array![

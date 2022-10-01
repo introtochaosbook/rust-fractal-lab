@@ -1,20 +1,18 @@
 // Input handling and scaling code based on https://github.com/remexre/mandelbrot-rust-gl
 
-use std::time::{Duration, Instant};
-use glium::{Display, Program, Surface, Texture2d, VertexBuffer};
 use glium::framebuffer::{MultiOutputFrameBuffer, ToColorAttachment};
-use glium::glutin::ContextBuilder;
 use glium::glutin::dpi::PhysicalSize;
-use glium::glutin::event::{ElementState, Event, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode, WindowEvent};
+use glium::glutin::event::{
+    ElementState, Event, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode, WindowEvent,
+};
+use glium::glutin::ContextBuilder;
+use glium::{Display, Program, Surface, Texture2d, VertexBuffer};
+use std::time::{Duration, Instant};
 
 use glium::pixel_buffer::PixelBuffer;
 use glium::texture::{Texture1d, UnsignedTexture2d};
 use glium::uniforms::{UniformValue, Uniforms};
 
-use std::borrow::Borrow;
-use std::cell::RefCell;
-use std::ops::Add;
-use std::rc::Rc;
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::index::{NoIndices, PrimitiveType};
@@ -22,6 +20,10 @@ use glium::program::ShaderStage;
 use imgui::{Condition, Context};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
+use std::borrow::Borrow;
+use std::cell::RefCell;
+use std::ops::Add;
+use std::rc::Rc;
 
 use ouroboros::self_referencing;
 use rust_fractal_lab::shader_builder::build_shader;
@@ -88,8 +90,7 @@ impl DrawParams {
     }
 
     fn pan(&mut self, x: f64, y: f64) {
-        self.scroll(x / 100.0,
-                    y / 100.0)
+        self.scroll(x / 100.0, y / 100.0)
     }
 
     fn zoom_in(&mut self) {
@@ -176,7 +177,7 @@ void main() {
         &build_shader(include_str!("shaders/fragment.glsl")),
         None,
     )
-        .unwrap();
+    .unwrap();
 
     let iteration_texture = UnsignedTexture2d::empty_with_format(
         &main_display,
@@ -185,15 +186,20 @@ void main() {
         1024,
         768,
     )
-        .unwrap();
+    .unwrap();
 
     iteration_texture
         .as_surface()
         .clear_color(0.0, 0.0, 0.0, 0.0);
 
     let color_texture = Texture2d::empty_with_format(
-        &main_display, glium::texture::UncompressedFloatFormat::F16F16F16F16, glium::texture::MipmapsOption::NoMipmap, 1024, 768,
-    ).unwrap();
+        &main_display,
+        glium::texture::UncompressedFloatFormat::F16F16F16F16,
+        glium::texture::MipmapsOption::NoMipmap,
+        1024,
+        768,
+    )
+    .unwrap();
 
     let mut tenants = DataBuilder {
         dt: Dt {
@@ -201,11 +207,15 @@ void main() {
             iteration_texture,
         },
         buffs_builder: |dt| {
-            let output = [("color", dt.color_texture.to_color_attachment()), ("depth", dt.iteration_texture.to_color_attachment())];
+            let output = [
+                ("color", dt.color_texture.to_color_attachment()),
+                ("depth", dt.iteration_texture.to_color_attachment()),
+            ];
             let framebuffer = MultiOutputFrameBuffer::new(&main_display, output).unwrap();
             (framebuffer, dt)
         },
-    }.build();
+    }
+    .build();
 
     let dim = main_display.get_framebuffer_dimensions();
     eprintln!("{:?}", dim);
@@ -215,7 +225,8 @@ void main() {
     let mut mouse_down = false;
     let mut mouse_last = (0f64, 0f64);
 
-    let mut renderer = Renderer::init(&mut imgui, &params_display).expect("Failed to initialize renderer");
+    let mut renderer =
+        Renderer::init(&mut imgui, &params_display).expect("Failed to initialize renderer");
     let mut last_frame = Instant::now();
 
     let mut a = 1f32;
@@ -235,25 +246,27 @@ void main() {
                     .prepare_frame(imgui.io_mut(), gl_params_window.window())
                     .expect("Failed to prepare frame");
                 gl_params_window.window().request_redraw();
-            },
+            }
             Event::RedrawRequested(window_id) => {
                 if *window_id == main_display.gl_window().window().id() {
                     tenants.with_mut(|fields| {
                         let framebuffer = &mut fields.buffs.0;
                         let dt = fields.dt;
 
-                        framebuffer.draw(
-                            &vertex_buffer,
-                            &indices,
-                            &program,
-                            &draw_params,
-                            &Default::default(),
-                        )
+                        framebuffer
+                            .draw(
+                                &vertex_buffer,
+                                &indices,
+                                &program,
+                                &draw_params,
+                                &Default::default(),
+                            )
                             .unwrap();
 
                         main_display.assert_no_error(None);
 
-                        let p: Vec<Vec<(u32, u32)>> = unsafe { dt.iteration_texture.unchecked_read() };
+                        let p: Vec<Vec<(u32, u32)>> =
+                            unsafe { dt.iteration_texture.unchecked_read() };
 
                         let mut p: Vec<_> = p
                             .into_iter()
@@ -265,45 +278,61 @@ void main() {
 
                         draw_params.ranges = [
                             p.get(0).copied().unwrap_or_default(),
-                            p.get((p.len() * 1 / 7).saturating_sub(1)).copied().unwrap_or_default(),
-                            p.get((p.len() * 2 / 7).saturating_sub(1)).copied().unwrap_or_default(),
-                            p.get((p.len() * 3 / 7).saturating_sub(1)).copied().unwrap_or_default(),
+                            p.get((p.len() * 1 / 7).saturating_sub(1))
+                                .copied()
+                                .unwrap_or_default(),
+                            p.get((p.len() * 2 / 7).saturating_sub(1))
+                                .copied()
+                                .unwrap_or_default(),
+                            p.get((p.len() * 3 / 7).saturating_sub(1))
+                                .copied()
+                                .unwrap_or_default(),
                         ];
 
                         draw_params.ranges_2 = [
-                            p.get((p.len() * 4 / 7).saturating_sub(1)).copied().unwrap_or_default(),
-                            p.get((p.len() * 5 / 7).saturating_sub(1)).copied().unwrap_or_default(),
-                            p.get((p.len() * 6 / 7).saturating_sub(1)).copied().unwrap_or_default(),
+                            p.get((p.len() * 4 / 7).saturating_sub(1))
+                                .copied()
+                                .unwrap_or_default(),
+                            p.get((p.len() * 5 / 7).saturating_sub(1))
+                                .copied()
+                                .unwrap_or_default(),
+                            p.get((p.len() * 6 / 7).saturating_sub(1))
+                                .copied()
+                                .unwrap_or_default(),
                             p.last().copied().unwrap_or_default(),
                         ];
 
-                        framebuffer.draw(
-                            &vertex_buffer,
-                            &indices,
-                            &program,
-                            &draw_params,
-                            &Default::default(),
-                        )
-                            .unwrap();
-
-                        eprintln!("{:?}", draw_params.ranges);
-
-                        let mut target = main_display.draw();
-                        target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
-
-                        if cfg!(windows) {
-                            // Blit the pixels to the surface
-                            dt.color_texture.as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
-                        } else {
-                            // TODO: at least on Ubuntu on VMware, blitting doesn't seem to be supported
-                            // Workaround for Linux: re-execute the shader, this time targeting the surface
-                            target.draw(
+                        framebuffer
+                            .draw(
                                 &vertex_buffer,
                                 &indices,
                                 &program,
                                 &draw_params,
                                 &Default::default(),
                             )
+                            .unwrap();
+
+                        eprintln!("{:?} {:?}", draw_params.ranges, draw_params.ranges_2);
+
+                        let mut target = main_display.draw();
+                        target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
+
+                        if cfg!(windows) {
+                            // Blit the pixels to the surface
+                            dt.color_texture
+                                .as_surface()
+                                .fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
+                        } else {
+                            // TODO: at least on Ubuntu on VMware, blitting doesn't seem to be supported
+                            // Workaround for Linux: re-execute the shader, this time targeting the surface
+                            target
+                                .draw(
+                                    &vertex_buffer,
+                                    &indices,
+                                    &program,
+                                    &draw_params,
+                                    &Default::default(),
+                                )
                                 .unwrap();
                         }
 
@@ -334,62 +363,71 @@ void main() {
                     params_target.finish().expect("Failed to swap buffers");
                 }
             }
-            outer @ Event::WindowEvent { window_id, .. } if *window_id == params_display.gl_window().window().id() => {
+            outer @ Event::WindowEvent { window_id, .. }
+                if *window_id == params_display.gl_window().window().id() =>
+            {
                 let gl_window = params_display.gl_window();
                 platform.handle_event(imgui.io_mut(), gl_window.window(), &outer);
-            },
-            Event::WindowEvent {
-                event, ..
-            } => {
-                dbg!(&event);
-                match event {
-                    WindowEvent::MouseInput { state, button: MouseButton::Left, .. } => mouse_down = match state {
+            }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::MouseInput {
+                    state,
+                    button: MouseButton::Left,
+                    ..
+                } => {
+                    mouse_down = match state {
                         ElementState::Pressed => true,
                         ElementState::Released => false,
-                    },
-                    WindowEvent::CursorMoved { position, .. } => {
-                        main_display.gl_window().window().request_redraw();
-                        if mouse_down {
-                            draw_params.pan(mouse_last.0 - position.x, position.y - mouse_last.1);
-                        }
-
-                        mouse_last = (position.x, position.y);
-
-                        if !mouse_down {
-                            return;
-                        }
                     }
-                    WindowEvent::MouseWheel { phase: TouchPhase::Moved, delta: MouseScrollDelta::LineDelta(_x, y), .. } => {
-                        main_display.gl_window().window().request_redraw();
-                        if *y < 0.0 {
-                            draw_params.zoom_out()
-                        } else {
-                            draw_params.zoom_in()
-                        }
+                }
+                WindowEvent::CursorMoved { position, .. } => {
+                    main_display.gl_window().window().request_redraw();
+                    if mouse_down {
+                        draw_params.pan(mouse_last.0 - position.x, position.y - mouse_last.1);
                     }
-                    WindowEvent::KeyboardInput { input, .. } if input.state == ElementState::Pressed => {
-                        if let Some(keycode) = input.virtual_keycode {
-                            match keycode {
-                                VirtualKeyCode::Minus => draw_params.zoom_out(),
-                                VirtualKeyCode::Equals => draw_params.zoom_in(),
-                                VirtualKeyCode::Space => draw_params.reset(),
-                                VirtualKeyCode::Up => draw_params.scroll(0.0, -1.0),
-                                VirtualKeyCode::Left => draw_params.scroll(-1.0, 0.0),
-                                VirtualKeyCode::Right => draw_params.scroll(1.0, 0.0),
-                                VirtualKeyCode::Down => draw_params.scroll(0.0, 1.0),
-                                _ => return,
-                            }
 
-                            main_display.gl_window().window().request_redraw();
-                        }
-                    }
-                    WindowEvent::CloseRequested => {
-                        *control_flow = ControlFlow::Exit;
+                    mouse_last = (position.x, position.y);
+
+                    if !mouse_down {
                         return;
                     }
-                    _ => {
-                        return;
+                }
+                WindowEvent::MouseWheel {
+                    phase: TouchPhase::Moved,
+                    delta: MouseScrollDelta::LineDelta(_x, y),
+                    ..
+                } => {
+                    main_display.gl_window().window().request_redraw();
+                    if *y < 0.0 {
+                        draw_params.zoom_out()
+                    } else {
+                        draw_params.zoom_in()
                     }
+                }
+                WindowEvent::KeyboardInput { input, .. }
+                    if input.state == ElementState::Pressed =>
+                {
+                    if let Some(keycode) = input.virtual_keycode {
+                        match keycode {
+                            VirtualKeyCode::Minus => draw_params.zoom_out(),
+                            VirtualKeyCode::Equals => draw_params.zoom_in(),
+                            VirtualKeyCode::Space => draw_params.reset(),
+                            VirtualKeyCode::Up => draw_params.scroll(0.0, -1.0),
+                            VirtualKeyCode::Left => draw_params.scroll(-1.0, 0.0),
+                            VirtualKeyCode::Right => draw_params.scroll(1.0, 0.0),
+                            VirtualKeyCode::Down => draw_params.scroll(0.0, 1.0),
+                            _ => return,
+                        }
+
+                        main_display.gl_window().window().request_redraw();
+                    }
+                }
+                WindowEvent::CloseRequested => {
+                    *control_flow = ControlFlow::Exit;
+                    return;
+                }
+                _ => {
+                    return;
                 }
             },
             _ => return,
