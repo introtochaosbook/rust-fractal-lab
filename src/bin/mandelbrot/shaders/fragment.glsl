@@ -18,6 +18,8 @@ uniform uint iterations;
 uniform uvec4 ranges;
 uniform uvec4 ranges_2;
 
+uniform bool is_mandelbrot;
+
 // <inject:complex.glsl>
 // <inject:colors.glsl>
 
@@ -45,26 +47,164 @@ vec3 get_color(uint iterations) {
     return mix(colors[6], colors[7], fraction);
 }
 
+subroutine vec2 f_t(vec2 z);
+subroutine uniform f_t F;
+
+subroutine(f_t)
+vec2 FCosh(vec2 z) {
+    return complex_cos(z);
+}
+
+subroutine(f_t)
+vec2 FSinh(vec2 z) {
+    return complex_sin(z);
+}
+
+subroutine(f_t)
+vec2 FRabbit(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(-0.122,0.745));
+    return z;
+}
+
+subroutine(f_t)
+vec2 FSiegel(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(-0.390540,-0.58679));
+    return z;
+}
+
+subroutine(f_t)
+vec2 FDragon(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(0.360284, 0.100376));
+    return z;
+}
+
+subroutine(f_t)
+vec2 FAmoeba(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(0.3, -0.4));
+    return z;
+}
+
+subroutine(f_t)
+vec2 FFlower1(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(0.384, 0.0));
+    return z;
+}
+
+subroutine(f_t)
+vec2 FFlower2(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(0.2541, 0.0));
+    return z;
+}
+
+subroutine(f_t)
+vec2 FCloud(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(-0.194, 0.6557));
+    return z;
+}
+
+subroutine(f_t)
+vec2 FSnowflakes(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(0.11031, 0.67037));
+    return z;
+}
+
+subroutine(f_t)
+vec2 FDendrite(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(0.0, 1.0));
+    return z;
+}
+
+subroutine(f_t)
+vec2 FEkg(vec2 z) {
+    z = complex_mult(z, z);
+    z = complex_add(z, vec2(-1.5, 0.0));
+    return z;
+}
+
+subroutine vec4 special_color_mode_t(uint i);
+subroutine uniform special_color_mode_t SpecialColorMode;
+
+subroutine(special_color_mode_t)
+vec4 SpecialColorModeDefault(uint i) {
+    return vec4(get_color(i), 1);
+}
+
+subroutine(special_color_mode_t)
+vec4 SpecialColorModeCloud(uint i) {
+    switch (i / 2u) {
+        // light grey
+        case 4u: return vec4(211.0/255.0, 211.0/255.0, 211.0/255.0, 1);
+        // dark grey
+        case 5u: return vec4(100.0/255.0, 100.0/255.0, 100.0/255.0, 1);
+        // white
+        default: return vec4(1, 1, 1, 1);
+    }
+}
+
+subroutine(special_color_mode_t)
+vec4 SpecialColorModeSnowflakes(uint i) {
+    if (i >= 8u) {
+        return vec4(0, 0, 0, 1);
+    } else if (i >= 12u) {
+        return vec4(1, 1, 1, 1);
+    }
+
+    return vec4(0, 0, 0, 1);
+}
+
 void main() {
     vec2 c = vec2(
         xMin + (xMax - xMin) * (gl_FragCoord.x / width),
         yMin + (yMax - yMin) * (gl_FragCoord.y / height));
 
     uint i = 0u;
-    float mag = 0;
-    const float escape = 4.0;
-    vec2 z = vec2(0, 0);
+    if (is_mandelbrot) {
+        float mag = 0;
+        const float escape = 4.0;
+        vec2 z = vec2(0, 0);
 
-    while (i++ < iterations && mag < escape) {
-        z = complex_square(z) + c;
-        mag = length(z);
-    }
+        while (i++ < iterations && mag < escape) {
+            z = complex_square(z) + c;
+            mag = length(z);
+        }
 
-    if (mag < escape) {
-        depth = uvec2(0, 1);
-        color = vec4(1, 1, 1, 1);
+        if (mag < escape) {
+            depth = uvec2(0, 1);
+            color = vec4(1, 1, 1, 1);
+        } else {
+            depth = uvec2(i, 0);
+            color = vec4(get_color(i), 1);
+        }
     } else {
-        depth = uvec2(i, 0);
-        color = vec4(get_color(i), 1);
+        vec2 z = c;
+
+        const float attract = 0.0001;
+
+        color = vec4(1, 1, 1, 1);
+        depth = uvec2(0, 1);
+
+        while (i++ < iterations) {
+            // Apply function
+            z = F(z);
+            float mag = length(z);
+            if (mag < attract) {
+                // Point is an attractor
+                break;
+            } else if (mag >= 100) {
+                // Point escaped
+                depth = uvec2(i, 0);
+                color = SpecialColorMode(i);
+                break;
+            }
+        }
     }
 }

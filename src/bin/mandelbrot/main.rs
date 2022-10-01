@@ -50,29 +50,33 @@ struct DrawParams {
     ranges: [u32; 4],
     ranges_2: [u32; 4],
     color: String,
+    f: String,
+    is_mandelbrot: bool,
 }
 
 impl DrawParams {
     fn new(dims: (u32, u32)) -> DrawParams {
         DrawParams {
             x_min: -2.0,
-            x_max: 1.0,
-            y_min: -1.0,
-            y_max: 1.0,
+            x_max: 2.0,
+            y_min: -2.0,
+            y_max: 2.0,
             width: dims.0 as f32,
             height: dims.1 as f32,
             iterations: 1024,
             ranges: [0; 4],
             ranges_2: [0; 4],
             color: "ColorInferno".into(),
+            f: "FEkg".into(),
+            is_mandelbrot: false,
         }
     }
 
     fn reset(&mut self) {
         self.x_min = -2.0;
-        self.x_max = 1.0;
-        self.y_min = -1.0;
-        self.y_max = 1.0;
+        self.x_max = 2.0;
+        self.y_min = -2.0;
+        self.y_max = 2.0;
     }
 
     fn scroll(&mut self, x: f64, y: f64) {
@@ -122,14 +126,32 @@ impl Uniforms for DrawParams {
             "Color",
             UniformValue::Subroutine(ShaderStage::Fragment, self.color.as_str()),
         );
+        f(
+            "F",
+            UniformValue::Subroutine(ShaderStage::Fragment, self.f.as_str()),
+        );
+        f(
+            "SpecialColorMode",
+            UniformValue::Subroutine(ShaderStage::Fragment, {
+                match self.f.as_str() {
+                    "FCloud" => "SpecialColorModeCloud",
+                    "FSnowflakes" => "SpecialColorModeSnowflakes",
+                    _ => "SpecialColorModeDefault",
+                }
+            }),
+        );
+        f("is_mandelbrot", UniformValue::Bool(self.is_mandelbrot));
     }
 }
+
+const WINDOW_WIDTH: u32 = 1024;
+const WINDOW_HEIGHT: u32 = 768;
 
 fn main() {
     let event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
-        .with_inner_size(PhysicalSize::new(1024.0, 768.0))
+        .with_inner_size(PhysicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT))
         .with_resizable(false)
         .with_title("Hello world");
 
@@ -178,8 +200,8 @@ void main() {
         &main_display,
         glium::texture::UncompressedUintFormat::U32U32,
         glium::texture::MipmapsOption::NoMipmap,
-        1024,
-        768,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT,
     )
     .unwrap();
 
@@ -191,8 +213,8 @@ void main() {
         &main_display,
         glium::texture::UncompressedFloatFormat::F16F16F16F16,
         glium::texture::MipmapsOption::NoMipmap,
-        1024,
-        768,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT,
     )
     .unwrap();
 
