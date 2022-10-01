@@ -63,7 +63,6 @@ fn main() {
 
     // Create n points along the x-axis, where n = screen_width
     let vertices: Vec<Vertex> = (0..screen_width)
-        .into_iter()
         .map(|x| Vertex {
             // The OpenGL coordinate system has all coordinates between
             // -1.0 and 1.0, so we need to do some scaling.
