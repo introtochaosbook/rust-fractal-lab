@@ -1,4 +1,4 @@
-// Input handling and scaling code based on https://github.com/remexre/mandelbrot-rust-gl
+// Scaling code based on https://github.com/remexre/mandelbrot-rust-gl
 
 use glium::framebuffer::{MultiOutputFrameBuffer, ToColorAttachment};
 use glium::glutin::dpi::PhysicalSize;
