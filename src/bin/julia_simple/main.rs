@@ -1,4 +1,4 @@
-use glium::glutin::dpi::LogicalSize;
+use glium::glutin::dpi::PhysicalSize;
 use glium::glutin::event::{DeviceEvent, Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
@@ -74,7 +74,7 @@ fn main() {
     let event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
-        .with_inner_size(LogicalSize::new(1024.0, 768.0))
+        .with_inner_size(PhysicalSize::new(1024.0, 768.0))
         .with_title("Hello world");
 
     let cb = ContextBuilder::new();
