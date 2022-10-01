@@ -13,7 +13,7 @@ uniform double yMax;
 uniform float height;
 uniform float width;
 
-uniform uint maxColors;
+uniform uint iterations;
 
 uniform uvec4 ranges;
 uniform uvec4 ranges_2;
@@ -55,7 +55,7 @@ void main() {
     const float escape = 4.0;
     vec2 z = vec2(0, 0);
 
-    while (i++ < maxColors * 2u && mag < escape) {
+    while (i++ < iterations && mag < escape) {
         z = complex_square(z) + c;
         mag = length(z);
     }
