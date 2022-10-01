@@ -34,7 +34,7 @@ impl DrawParams {
             width: dims.0 as f32,
             height: dims.1 as f32,
             max_colors: 10,
-            f: "FEkg".into(),
+            f: "FRabbit".into(),
             color: "ColorInferno".into(),
         }
     }

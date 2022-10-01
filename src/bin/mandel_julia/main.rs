@@ -16,6 +16,7 @@ use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 use glium::program::ShaderStage;
+use hdrhistogram::Histogram;
 use imgui::{Condition, Context};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
@@ -66,8 +67,8 @@ impl DrawParams {
             iterations: 1024,
             ranges: [0; 4],
             ranges_2: [0; 4],
-            color: "ColorInferno".into(),
-            f: "FEkg".into(),
+            color: "ColorTurbo".into(),
+            f: "FRabbit".into(),
             is_mandelbrot: false,
         }
     }
@@ -285,39 +286,29 @@ void main() {
                         let p: Vec<Vec<(u32, u32)>> =
                             unsafe { dt.iteration_texture.unchecked_read() };
 
-                        let mut p: Vec<_> = p
-                            .into_iter()
-                            .flatten()
-                            .filter(|b| b.1 != 1)
-                            .map(|b| b.0)
-                            .collect();
-                        p.sort_unstable();
+                        let mut hist = Histogram::<u32>::new(3).unwrap();
+                        for p in p.clone().into_iter().flatten().filter(|b| b.1 != 1) {
+                            hist.record(p.0 as u64).unwrap();
+                        }
 
-                        draw_params.ranges = [
-                            p.first().copied().unwrap_or_default(),
-                            p.get((p.len() / 7).saturating_sub(1))
-                                .copied()
-                                .unwrap_or_default(),
-                            p.get((p.len() * 2 / 7).saturating_sub(1))
-                                .copied()
-                                .unwrap_or_default(),
-                            p.get((p.len() * 3 / 7).saturating_sub(1))
-                                .copied()
-                                .unwrap_or_default(),
-                        ];
+                        // Compute the octiles (8-quantiles)
+                        let mut octiles = (0..=8)
+                            .map(|i| hist.value_at_quantile(i as f64 / 8.0))
+                            .collect::<Vec<_>>();
 
-                        draw_params.ranges_2 = [
-                            p.get((p.len() * 4 / 7).saturating_sub(1))
-                                .copied()
-                                .unwrap_or_default(),
-                            p.get((p.len() * 5 / 7).saturating_sub(1))
-                                .copied()
-                                .unwrap_or_default(),
-                            p.get((p.len() * 6 / 7).saturating_sub(1))
-                                .copied()
-                                .unwrap_or_default(),
-                            p.last().copied().unwrap_or_default(),
-                        ];
+                        // Try to nudge identical values to the next value
+                        let max = hist.max();
+                        for i in 0..7 {
+                            octiles[i + 1] = octiles[i].max(octiles[i + 1]);
+                            if octiles[i] == octiles[i + 1] {
+                                octiles[i + 1] = hist.next_non_equivalent(octiles[i + 1]).min(max);
+                            }
+                        }
+
+                        let octiles = octiles.into_iter().map(|v| v as u32).collect::<Vec<_>>();
+
+                        draw_params.ranges = octiles[0..4].try_into().unwrap();
+                        draw_params.ranges_2 = octiles[4..8].try_into().unwrap();
 
                         framebuffer
                             .draw(
