@@ -7,10 +7,9 @@ use glium::glutin::event::{
 };
 use glium::glutin::ContextBuilder;
 use glium::{Display, Program, Surface, Texture2d, VertexBuffer};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
-use glium::pixel_buffer::PixelBuffer;
-use glium::texture::{Texture1d, UnsignedTexture2d};
+use glium::texture::UnsignedTexture2d;
 use glium::uniforms::{UniformValue, Uniforms};
 
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
@@ -20,10 +19,6 @@ use glium::program::ShaderStage;
 use imgui::{Condition, Context};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
-use std::borrow::Borrow;
-use std::cell::RefCell;
-use std::ops::Add;
-use std::rc::Rc;
 
 use ouroboros::self_referencing;
 use rust_fractal_lab::shader_builder::build_shader;
@@ -277,8 +272,8 @@ void main() {
                         p.sort_unstable();
 
                         draw_params.ranges = [
-                            p.get(0).copied().unwrap_or_default(),
-                            p.get((p.len() * 1 / 7).saturating_sub(1))
+                            p.first().copied().unwrap_or_default(),
+                            p.get((p.len() / 7).saturating_sub(1))
                                 .copied()
                                 .unwrap_or_default(),
                             p.get((p.len() * 2 / 7).saturating_sub(1))
@@ -367,7 +362,7 @@ void main() {
                 if *window_id == params_display.gl_window().window().id() =>
             {
                 let gl_window = params_display.gl_window();
-                platform.handle_event(imgui.io_mut(), gl_window.window(), &outer);
+                platform.handle_event(imgui.io_mut(), gl_window.window(), outer);
             }
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::MouseInput {
@@ -388,9 +383,7 @@ void main() {
 
                     mouse_last = (position.x, position.y);
 
-                    if !mouse_down {
-                        return;
-                    }
+                    if !mouse_down {}
                 }
                 WindowEvent::MouseWheel {
                     phase: TouchPhase::Moved,
@@ -424,13 +417,10 @@ void main() {
                 }
                 WindowEvent::CloseRequested => {
                     *control_flow = ControlFlow::Exit;
-                    return;
                 }
-                _ => {
-                    return;
-                }
+                _ => {}
             },
-            _ => return,
+            _ => (),
         }
     });
 }
