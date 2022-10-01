@@ -18,7 +18,7 @@ pub fn build_shader(input: &str) -> Cow<str> {
     });
 
     ret.lines().enumerate().for_each(|(i, line)| {
-        eprintln!("{:>3}: {}", i, line);
+        eprintln!("{:>3}: {}", i + 1, line);
     });
 
     ret
