@@ -1,7 +1,7 @@
 use ndarray::{array, Array, Ix2};
 use rand::Rng;
-use rust_fractal_lab::ifs::IfsProgram;
 use rust_fractal_lab::forest::draw_forest;
+use rust_fractal_lab::ifs::IfsProgram;
 
 fn main() {
     let mut program = IfsProgram::default();
@@ -18,7 +18,7 @@ fn main() {
         [0.33, 1.0, 0.0, 0.33, inc, 0.0, 0.125],
         [0.33, 1.0, 0.0, 0.33, 1.0, inc, 0.125],
         [0.33, 1.0, 0.0, 0.33, inc, inc, 0.125],
-        [0.33, 0.0, 0.0, 0.33, inc/ 2.0, 1.0, 0.125],
+        [0.33, 0.0, 0.0, 0.33, inc / 2.0, 1.0, 0.125],
         [0.33, 0.0, 0.0, 0.33, inc, inc / 2.0, 0.125],
         [0.33, 0.0, 0.0, 0.33, 1.0, inc / 2.0, 0.125],
         [0.33, 0.0, 0.0, 0.33, inc / 2.0, inc, 0.125],
@@ -46,7 +46,11 @@ fn main() {
     program.normalize_points_to_ranges(-1.0, 1.0, -1.0, 0.5);
 
     // Draw mist
-    program.sample(&cloud_d, [129.0 / 255.0, 129.0 / 255.0, 129.0 / 255.0, 1.0], 30000);
+    program.sample(
+        &cloud_d,
+        [129.0 / 255.0, 129.0 / 255.0, 129.0 / 255.0, 1.0],
+        30000,
+    );
     // Place the mist in upper half of screen
     program.normalize_points_to_ranges(-1.0, 1.0, 0.5, 1.0);
 
