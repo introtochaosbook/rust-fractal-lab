@@ -1,5 +1,3 @@
-// Initial code based on https://github.com/remexre/mandelbrot-rust-gl
-
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{DeviceEvent, Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
