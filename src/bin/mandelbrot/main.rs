@@ -6,12 +6,19 @@ use glium::framebuffer::{MultiOutputFrameBuffer, ToColorAttachment};
 use glium::glutin::ContextBuilder;
 use glium::glutin::dpi::PhysicalSize;
 use glium::glutin::event::{ElementState, Event, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode, WindowEvent};
+
+use glium::pixel_buffer::PixelBuffer;
+use glium::texture::{Texture1d, UnsignedTexture2d};
+use glium::uniforms::{UniformValue, Uniforms};
+
+use std::borrow::Borrow;
+use std::cell::RefCell;
+use std::ops::Add;
+use std::rc::Rc;
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 use glium::program::ShaderStage;
-use glium::texture::UnsignedTexture2d;
-use glium::uniforms::{Uniforms, UniformValue};
 use imgui::{Condition, Context};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
@@ -19,8 +26,6 @@ use imgui_winit_support::{HiDpiMode, WinitPlatform};
 use ouroboros::self_referencing;
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
-
-use crate::ControlFlow::Wait;
 
 pub struct Dt {
     color_texture: Texture2d,
@@ -46,6 +51,7 @@ struct DrawParams {
     height: f32,
     max_colors: u32,
     ranges: [u32; 4],
+    ranges_2: [u32; 4],
     color: String,
 }
 
@@ -58,9 +64,10 @@ impl DrawParams {
             y_max: 1.0,
             width: dims.0 as f32,
             height: dims.1 as f32,
-            max_colors: 256,
+            max_colors: 1024,
             ranges: [0; 4],
-            color: "ColorTurbo".into(),
+            ranges_2: [0; 4],
+            color: "ColorInferno".into(),
         }
     }
 
@@ -114,6 +121,7 @@ impl Uniforms for DrawParams {
         f("height", UniformValue::Float(self.height));
         f("maxColors", UniformValue::UnsignedInt(self.max_colors));
         f("ranges", UniformValue::UnsignedIntVec4(self.ranges));
+        f("ranges_2", UniformValue::UnsignedIntVec4(self.ranges_2));
         f(
             "Color",
             UniformValue::Subroutine(ShaderStage::Fragment, self.color.as_str()),
@@ -213,7 +221,7 @@ void main() {
     let mut a = 1f32;
 
     event_loop.run(move |ev, _, control_flow| {
-        *control_flow = Wait;
+        *control_flow = ControlFlow::Wait;
 
         match &ev {
             Event::NewEvents(_) => {
@@ -257,8 +265,15 @@ void main() {
 
                         draw_params.ranges = [
                             p.get(0).copied().unwrap_or_default(),
-                            p.get((p.len() * 3 / 4).saturating_sub(1)).copied().unwrap_or_default(),
-                            p.get((p.len() * 7 / 8).saturating_sub(1)).copied().unwrap_or_default(),
+                            p.get((p.len() * 1 / 7).saturating_sub(1)).copied().unwrap_or_default(),
+                            p.get((p.len() * 2 / 7).saturating_sub(1)).copied().unwrap_or_default(),
+                            p.get((p.len() * 3 / 7).saturating_sub(1)).copied().unwrap_or_default(),
+                        ];
+
+                        draw_params.ranges_2 = [
+                            p.get((p.len() * 4 / 7).saturating_sub(1)).copied().unwrap_or_default(),
+                            p.get((p.len() * 5 / 7).saturating_sub(1)).copied().unwrap_or_default(),
+                            p.get((p.len() * 6 / 7).saturating_sub(1)).copied().unwrap_or_default(),
                             p.last().copied().unwrap_or_default(),
                         ];
 
