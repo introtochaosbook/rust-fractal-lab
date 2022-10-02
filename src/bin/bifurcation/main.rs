@@ -114,7 +114,7 @@ void main() {
             gl_window.window().request_redraw();
         }
         Event::RedrawRequested(_) => {
-            let ui = imgui.frame();
+            let ui = imgui.new_frame();
 
             ui.window("Controls")
                 .size([300.0, 150.0], Condition::FirstUseEver)
