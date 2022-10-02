@@ -21,11 +21,11 @@ void main()
     float x = gl_in[0].gl_Position[0] / zoom + pan_hor;
 
     // Use x to sweep c across its range
-    float c = map(x, -1.0, 1, c_range[0], c_range[1]);
+    float c = map(x, -1.0, 1.0, c_range[0], c_range[1]);
 
-    float f_x = 0;
+    float f_x = 0.9;
     for (int i = 0; i < MAX_VERTICES; i++) {
-        f_x = pow(f_x, 2) + c;
+        f_x = c*f_x - c*pow(f_x, 2);
 
         if (i > 50) {
             float f_x_remapped = (f_x - pan_vert) * zoom;

@@ -23,10 +23,10 @@ struct DrawParams {
 impl Default for DrawParams {
     fn default() -> DrawParams {
         DrawParams {
-            pan_vert: 0.0,
-            zoom: 0.5,
-            pan_hor: 1.0,
-            c_range: [-2.0, -1.0],
+            pan_vert: 0.5,
+            zoom: 1.0,
+            pan_hor: 4.0,
+            c_range: [-2.0, 0.0],
         }
     }
 }
@@ -121,8 +121,8 @@ void main() {
                 .size([300.0, 150.0], Condition::FirstUseEver)
                 .position([600.0, 50.0], Condition::FirstUseEver)
                 .build(|| {
-                    ui.slider("pan_hor", -2.0, 2.0, &mut draw_params.pan_hor);
-                    ui.slider("pan_vert", -2.0, 2.0, &mut draw_params.pan_vert);
+                    ui.slider("pan_hor", -5.0, 5.0, &mut draw_params.pan_hor);
+                    ui.slider("pan_vert", -5.0, 5.0, &mut draw_params.pan_vert);
                     ui.slider("zoom", 0.001, 10.0, &mut draw_params.zoom);
                     ui.slider_config("c min/max", -2.0_f32, 2.0_f32)
                         .flags(SliderFlags::ALWAYS_CLAMP)
