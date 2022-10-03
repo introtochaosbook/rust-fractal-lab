@@ -26,7 +26,7 @@ void main() {
     const float escape = 4.0;
     vec2 z = vec2(0, 0);
 
-    while (i++ < maxColors * 2u && mag < escape) {
+    while (i++ < maxColors && mag < escape) {
         z = complex_square(z) + c;
         mag = length(z);
     }
@@ -34,7 +34,7 @@ void main() {
     if (mag < escape) {
         color = vec4(0, 0, 0, 1);
     } else {
-        vec3 s = Color(float(i) / float(maxColors * 2u));
+        vec3 s = Color(float(i) / float(maxColors));
         color = vec4(s.xyz, 1);
     }
 }
