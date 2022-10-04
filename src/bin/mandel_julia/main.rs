@@ -47,7 +47,7 @@ struct DrawParams {
 
     width: f32,
     height: f32,
-    iterations: u32,
+    max_iterations: u32,
     ranges: [u32; 4],
     ranges_2: [u32; 4],
     color_map: String,
@@ -64,7 +64,7 @@ impl DrawParams {
             y_max: 2.0,
             width: dims.0 as f32,
             height: dims.1 as f32,
-            iterations: 1024,
+            max_iterations: 1024,
             ranges: [0; 4],
             ranges_2: [0; 4],
             color_map: "ColorMapTurbo".into(),
@@ -120,7 +120,7 @@ impl Uniforms for DrawParams {
         f("yMax", UniformValue::Double(self.y_max));
         f("width", UniformValue::Float(self.width));
         f("height", UniformValue::Float(self.height));
-        f("iterations", UniformValue::UnsignedInt(self.iterations));
+        f("max_iterations", UniformValue::UnsignedInt(self.max_iterations));
         f("ranges", UniformValue::UnsignedIntVec4(self.ranges));
         f("ranges_2", UniformValue::UnsignedIntVec4(self.ranges_2));
         f(
