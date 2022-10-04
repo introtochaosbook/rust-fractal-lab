@@ -294,9 +294,12 @@ void main() {
 
                         main_display.assert_no_error(None);
 
+                        // This call to unchecked_read requires our fork of glium. If you try vanilla
+                        // glium, it will fail to compile.
                         let p: Vec<Vec<(u32, u32)>> =
                             unsafe { dt.iteration_texture.unchecked_read() };
 
+                        // Create histogram using 3 significant figures (crate's recommended default)
                         let mut hist = Histogram::<u32>::new(3).unwrap();
                         for p in p.into_iter().flatten().filter(|b| b.1 != 1) {
                             hist.record(p.0 as u64).unwrap();
