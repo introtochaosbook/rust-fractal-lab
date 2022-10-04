@@ -1,7 +1,7 @@
 // Scaling code based on https://github.com/remexre/mandelbrot-rust-gl
 
 use glium::framebuffer::{MultiOutputFrameBuffer, ToColorAttachment};
-use glium::glutin::dpi::{LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize};
+use glium::glutin::dpi::{PhysicalPosition, PhysicalSize};
 use glium::glutin::event::{
     ElementState, Event, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode, WindowEvent,
 };
@@ -260,8 +260,6 @@ void main() {
         Renderer::init(&mut imgui, &params_display).expect("Failed to initialize renderer");
     let mut last_frame = Instant::now();
 
-    let mut a = 1f32;
-
     event_loop.run(move |ev, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
@@ -300,7 +298,7 @@ void main() {
                             unsafe { dt.iteration_texture.unchecked_read() };
 
                         let mut hist = Histogram::<u32>::new(3).unwrap();
-                        for p in p.clone().into_iter().flatten().filter(|b| b.1 != 1) {
+                        for p in p.into_iter().flatten().filter(|b| b.1 != 1) {
                             hist.record(p.0 as u64).unwrap();
                         }
 
