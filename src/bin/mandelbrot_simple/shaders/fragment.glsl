@@ -34,7 +34,7 @@ void main() {
     if (mag < escape) {
         color = vec4(0, 0, 0, 1);
     } else {
-        vec3 s = Color(float(i) / float(maxColors));
+        vec3 s = ColorMap(float(i) / float(maxColors));
         color = vec4(s.xyz, 1);
     }
 }

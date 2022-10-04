@@ -50,7 +50,7 @@ struct DrawParams {
     iterations: u32,
     ranges: [u32; 4],
     ranges_2: [u32; 4],
-    color: String,
+    color_map: String,
     f: String,
     is_mandelbrot: bool,
 }
@@ -67,7 +67,7 @@ impl DrawParams {
             iterations: 1024,
             ranges: [0; 4],
             ranges_2: [0; 4],
-            color: "ColorTurbo".into(),
+            color_map: "ColorMapTurbo".into(),
             f: "FRabbit".into(),
             is_mandelbrot: false,
         }
@@ -124,8 +124,8 @@ impl Uniforms for DrawParams {
         f("ranges", UniformValue::UnsignedIntVec4(self.ranges));
         f("ranges_2", UniformValue::UnsignedIntVec4(self.ranges_2));
         f(
-            "Color",
-            UniformValue::Subroutine(ShaderStage::Fragment, self.color.as_str()),
+            "ColorMap",
+            UniformValue::Subroutine(ShaderStage::Fragment, self.color_map.as_str()),
         );
         f(
             "F",

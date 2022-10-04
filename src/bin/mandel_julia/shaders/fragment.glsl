@@ -33,7 +33,7 @@ uint get_ranges_value(uint index) {
 }
 
 vec3 get_color(uint iterations) {
-    vec3 colors[8] = vec3[]( Color(0.0), Color(1.0 / 7.0), Color(2.0 / 7.0), Color(3.0 / 7.0), Color(4.0 / 7.0), Color(5.0 / 7.0), Color(6.0 / 7.0), Color(0.9) );
+    vec3 colors[8] = vec3[]( ColorMap(0.0), ColorMap(1.0 / 7.0), ColorMap(2.0 / 7.0), ColorMap(3.0 / 7.0), ColorMap(4.0 / 7.0), ColorMap(5.0 / 7.0), ColorMap(6.0 / 7.0), ColorMap(0.9) );
 
     // based on https://physicspython.wordpress.com/2020/03/04/visualizing-the-mandelbrot-set-using-opengl-part-2/
     float fraction = 0.0f;
