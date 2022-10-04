@@ -234,7 +234,7 @@ void main() {
         buffs_builder: |dt| {
             let output = [
                 ("color", dt.color_texture.to_color_attachment()),
-                ("depth", dt.iteration_texture.to_color_attachment()),
+                ("pixel_iterations", dt.iteration_texture.to_color_attachment()),
             ];
             let framebuffer = MultiOutputFrameBuffer::new(&main_display, output).unwrap();
             (framebuffer, dt)
