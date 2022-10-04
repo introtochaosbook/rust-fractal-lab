@@ -1,7 +1,7 @@
 // Scaling code based on https://github.com/remexre/mandelbrot-rust-gl
 
 use glium::framebuffer::{MultiOutputFrameBuffer, ToColorAttachment};
-use glium::glutin::dpi::PhysicalSize;
+use glium::glutin::dpi::{LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize};
 use glium::glutin::event::{
     ElementState, Event, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode, WindowEvent,
 };
@@ -154,12 +154,19 @@ fn main() {
     let wb = WindowBuilder::new()
         .with_inner_size(PhysicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT))
         .with_resizable(false)
-        .with_title("Hello world");
+        .with_title("Hello world")
+        .with_position(PhysicalPosition::new(0, 0));
 
     let cb = ContextBuilder::new();
     let main_display = Display::new(wb, cb, &event_loop).unwrap();
 
-    let wb = WindowBuilder::new().with_title("Parameters");
+    let wb = WindowBuilder::new()
+        .with_title("Parameters")
+        .with_resizable(false)
+        .with_position(PhysicalPosition::new(
+            main_display.gl_window().window().inner_size().width,
+            0,
+        ));
     let cb = ContextBuilder::new();
     let params_display = Display::new(wb, cb, &event_loop).unwrap();
 
@@ -353,13 +360,27 @@ void main() {
                     let ui = imgui.frame();
 
                     ui.window("Controls")
-                        .size([300.0, 150.0], Condition::FirstUseEver)
-                        .position([600.0, 50.0], Condition::FirstUseEver)
+                        .always_auto_resize(true)
+                        .position([0.0, 0.0], Condition::FirstUseEver)
                         .build(|| {
-                            ui.slider("pan_hor", -2.0, 2.0, &mut a);
+                            let mut changed = false;
+
+                            let p = vec![1.0, 2.0, 3.0, 3.0, 3.0, 3.0];
+                            ui.plot_histogram("ABC", p.as_slice()).graph_size([300.0, 100.0]).build();
+                            changed |= ui.input_scalar("x_max", &mut draw_params.x_max).build();
+                            changed |= ui.slider("iterations", 1, 1024, &mut draw_params.iterations);
+
+                            if changed {
+                                main_display.gl_window().window().request_redraw();
+                            }
+
                         });
 
                     let gl_params_window = params_display.gl_window();
+                    // TODO doesn't seem to work
+                    // gl_params_window
+                    //     .window()
+                    //     .set_inner_size(LogicalSize::<u32>::from(ui.window_size()));
 
                     platform.prepare_render(ui, gl_params_window.window());
                     let draw_data = imgui.render();
