@@ -369,7 +369,7 @@ void main() {
                             let p = vec![1.0, 2.0, 3.0, 3.0, 3.0, 3.0];
                             ui.plot_histogram("ABC", p.as_slice()).graph_size([300.0, 100.0]).build();
                             changed |= ui.input_scalar("x_max", &mut draw_params.x_max).build();
-                            changed |= ui.slider("iterations", 1, 1024, &mut draw_params.iterations);
+                            changed |= ui.slider("iterations", 1, 1024, &mut draw_params.max_iterations);
 
                             if changed {
                                 main_display.gl_window().window().request_redraw();
