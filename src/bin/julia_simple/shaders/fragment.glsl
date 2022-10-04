@@ -22,7 +22,7 @@ subroutine uniform special_color_mode_t SpecialColorMode;
 
 subroutine(special_color_mode_t)
 vec4 SpecialColorModeDefault(uint i) {
-    vec3 s = Color(float(i) / float(maxColors * 2u));
+    vec3 s = ColorMap(float(i) / float(maxColors));
     return vec4(s.xyz, 1);
 }
 
@@ -58,7 +58,7 @@ void main() {
 
     color = vec4(1, 1, 1, 1);
 
-    for (uint i = 0u; i < maxColors * 2u; i++) {
+    for (uint i = 0u; i < maxColors; i++) {
         // Apply function
         z = F(z);
         float mag = length(z);

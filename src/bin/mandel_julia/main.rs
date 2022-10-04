@@ -47,10 +47,10 @@ struct DrawParams {
 
     width: f32,
     height: f32,
-    iterations: u32,
+    max_iterations: u32,
     ranges: [u32; 4],
     ranges_2: [u32; 4],
-    color: String,
+    color_map: String,
     f: String,
     is_mandelbrot: bool,
 }
@@ -64,10 +64,10 @@ impl DrawParams {
             y_max: 2.0,
             width: dims.0 as f32,
             height: dims.1 as f32,
-            iterations: 1024,
+            max_iterations: 1024,
             ranges: [0; 4],
             ranges_2: [0; 4],
-            color: "ColorTurbo".into(),
+            color_map: "ColorMapTurbo".into(),
             f: "FRabbit".into(),
             is_mandelbrot: false,
         }
@@ -120,12 +120,12 @@ impl Uniforms for DrawParams {
         f("yMax", UniformValue::Double(self.y_max));
         f("width", UniformValue::Float(self.width));
         f("height", UniformValue::Float(self.height));
-        f("iterations", UniformValue::UnsignedInt(self.iterations));
+        f("max_iterations", UniformValue::UnsignedInt(self.max_iterations));
         f("ranges", UniformValue::UnsignedIntVec4(self.ranges));
         f("ranges_2", UniformValue::UnsignedIntVec4(self.ranges_2));
         f(
-            "Color",
-            UniformValue::Subroutine(ShaderStage::Fragment, self.color.as_str()),
+            "ColorMap",
+            UniformValue::Subroutine(ShaderStage::Fragment, self.color_map.as_str()),
         );
         f(
             "F",
@@ -317,22 +317,23 @@ void main() {
                         draw_params.ranges = octiles[0..4].try_into().unwrap();
                         draw_params.ranges_2 = octiles[4..8].try_into().unwrap();
 
-                        framebuffer
-                            .draw(
-                                &vertex_buffer,
-                                &indices,
-                                &program,
-                                &draw_params,
-                                &Default::default(),
-                            )
-                            .unwrap();
-
                         eprintln!("{:?} {:?}", draw_params.ranges, draw_params.ranges_2);
 
                         let mut target = main_display.draw();
                         target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
 
                         if cfg!(windows) {
+                            // Re-draw fractal using updated iteration counts
+                            framebuffer
+                                .draw(
+                                    &vertex_buffer,
+                                    &indices,
+                                    &program,
+                                    &draw_params,
+                                    &Default::default(),
+                                )
+                                .unwrap();
+
                             // Blit the pixels to the surface
                             dt.color_texture
                                 .as_surface()

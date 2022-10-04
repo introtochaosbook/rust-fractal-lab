@@ -2,11 +2,11 @@
 
 // Colormap subroutines from here: https://observablehq.com/@flimsyhat/webgl-color-maps
 
-subroutine vec3 color_t(float t);
-subroutine uniform color_t Color;
+subroutine vec3 color_map_t(float t);
+subroutine uniform color_map_t ColorMap;
 
-subroutine(color_t)
-vec3 ColorInferno(float t) {
+subroutine(color_map_t)
+vec3 ColorMapInferno(float t) {
     const vec3 c0 = vec3(0.0002189403691192265, 0.001651004631001012, -0.01948089843709184);
     const vec3 c1 = vec3(0.1065134194856116, 0.5639564367884091, 3.932712388889277);
     const vec3 c2 = vec3(11.60249308247187, -3.972853965665698, -15.9423941062914);
@@ -18,8 +18,8 @@ vec3 ColorInferno(float t) {
     return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
 }
 
-subroutine(color_t)
-vec3 ColorViridis(float t) {
+subroutine(color_map_t)
+vec3 ColorMapViridis(float t) {
     const vec3 c0 = vec3(0.2777273272234177, 0.005407344544966578, 0.3340998053353061);
     const vec3 c1 = vec3(0.1050930431085774, 1.404613529898575, 1.384590162594685);
     const vec3 c2 = vec3(-0.3308618287255563, 0.214847559468213, 0.09509516302823659);
@@ -31,8 +31,8 @@ vec3 ColorViridis(float t) {
     return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
 }
 
-subroutine(color_t)
-vec3 ColorPlasma(float t) {
+subroutine(color_map_t)
+vec3 ColorMapPlasma(float t) {
     const vec3 c0 = vec3(0.05873234392399702, 0.02333670892565664, 0.5433401826748754);
     const vec3 c1 = vec3(2.176514634195958, 0.2383834171260182, 0.7539604599784036);
     const vec3 c2 = vec3(-2.689460476458034, -7.455851135738909, 3.110799939717086);
@@ -44,8 +44,8 @@ vec3 ColorPlasma(float t) {
     return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
 }
 
-subroutine(color_t)
-vec3 ColorMagma(float t) {
+subroutine(color_map_t)
+vec3 ColorMapMagma(float t) {
     const vec3 c0 = vec3(-0.002136485053939582, -0.000749655052795221, -0.005386127855323933);
     const vec3 c1 = vec3(0.2516605407371642, 0.6775232436837668, 2.494026599312351);
     const vec3 c2 = vec3(8.353717279216625, -3.577719514958484, 0.3144679030132573);
@@ -58,8 +58,8 @@ vec3 ColorMagma(float t) {
 }
 
 // ColorTurbo is copyright 2019 Google LLC.
-subroutine(color_t)
-vec3 ColorTurbo(float x) {
+subroutine(color_map_t)
+vec3 ColorMapTurbo(float x) {
     const vec4 kRedVec4 = vec4(0.13572138, 4.61539260, -42.66032258, 132.13108234);
     const vec4 kGreenVec4 = vec4(0.09140261, 2.19418839, 4.84296658, -14.18503333);
     const vec4 kBlueVec4 = vec4(0.10667330, 12.64194608, -60.58204836, 110.36276771);

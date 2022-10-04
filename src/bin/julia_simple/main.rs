@@ -21,7 +21,7 @@ struct DrawParams {
     height: f32,
     max_colors: u32,
     f: String,
-    color: String,
+    color_map: String,
 }
 
 impl DrawParams {
@@ -35,7 +35,7 @@ impl DrawParams {
             height: dims.1 as f32,
             max_colors: 10,
             f: "FRabbit".into(),
-            color: "ColorInferno".into(),
+            color_map: "ColorMapInferno".into(),
         }
     }
 }
@@ -54,8 +54,8 @@ impl Uniforms for DrawParams {
             UniformValue::Subroutine(ShaderStage::Fragment, self.f.as_str()),
         );
         f(
-            "Color",
-            UniformValue::Subroutine(ShaderStage::Fragment, self.color.as_str()),
+            "ColorMap",
+            UniformValue::Subroutine(ShaderStage::Fragment, self.color_map.as_str()),
         );
         f(
             "SpecialColorMode",
