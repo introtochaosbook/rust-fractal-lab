@@ -310,22 +310,23 @@ void main() {
                         draw_params.ranges = octiles[0..4].try_into().unwrap();
                         draw_params.ranges_2 = octiles[4..8].try_into().unwrap();
 
-                        framebuffer
-                            .draw(
-                                &vertex_buffer,
-                                &indices,
-                                &program,
-                                &draw_params,
-                                &Default::default(),
-                            )
-                            .unwrap();
-
                         eprintln!("{:?} {:?}", draw_params.ranges, draw_params.ranges_2);
 
                         let mut target = main_display.draw();
                         target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
 
                         if cfg!(windows) {
+                            // Re-draw fractal using updated iteration counts
+                            framebuffer
+                                .draw(
+                                    &vertex_buffer,
+                                    &indices,
+                                    &program,
+                                    &draw_params,
+                                    &Default::default(),
+                                )
+                                .unwrap();
+
                             // Blit the pixels to the surface
                             dt.color_texture
                                 .as_surface()
