@@ -1,5 +1,5 @@
-use rand::Rng;
 use ndarray::{array, Array, Ix2};
+use rand::Rng;
 use rust_fractal_lab::ifs::IfsProgram;
 
 fn main() {
@@ -21,7 +21,14 @@ fn main() {
         let shift_y = rng.gen_range(-200.0..200.0);
         let scale = rng.gen_range(0.6..1.0);
 
-        program.sample_affine(&d, [r/255.0, g/255.0, 0.0, 1.0], 2000, scale, shift_x, shift_y);
+        program.sample_affine(
+            &d,
+            [r / 255.0, g / 255.0, 0.0, 1.0],
+            2000,
+            scale,
+            shift_x,
+            shift_y,
+        );
     }
 
     program.run(Some(1.5));

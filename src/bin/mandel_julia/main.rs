@@ -120,7 +120,10 @@ impl Uniforms for DrawParams {
         f("yMax", UniformValue::Double(self.y_max));
         f("width", UniformValue::Float(self.width));
         f("height", UniformValue::Float(self.height));
-        f("max_iterations", UniformValue::UnsignedInt(self.max_iterations));
+        f(
+            "max_iterations",
+            UniformValue::UnsignedInt(self.max_iterations),
+        );
         f("ranges", UniformValue::UnsignedIntVec4(self.ranges));
         f("ranges_2", UniformValue::UnsignedIntVec4(self.ranges_2));
         f(
@@ -234,7 +237,10 @@ void main() {
         buffs_builder: |dt| {
             let output = [
                 ("color", dt.color_texture.to_color_attachment()),
-                ("pixel_iterations", dt.iteration_texture.to_color_attachment()),
+                (
+                    "pixel_iterations",
+                    dt.iteration_texture.to_color_attachment(),
+                ),
             ];
             let framebuffer = MultiOutputFrameBuffer::new(&main_display, output).unwrap();
             (framebuffer, dt)
@@ -367,14 +373,16 @@ void main() {
                             let mut changed = false;
 
                             let p = vec![1.0, 2.0, 3.0, 3.0, 3.0, 3.0];
-                            ui.plot_histogram("ABC", p.as_slice()).graph_size([300.0, 100.0]).build();
+                            ui.plot_histogram("ABC", p.as_slice())
+                                .graph_size([300.0, 100.0])
+                                .build();
                             changed |= ui.input_scalar("x_max", &mut draw_params.x_max).build();
-                            changed |= ui.slider("iterations", 1, 1024, &mut draw_params.max_iterations);
+                            changed |=
+                                ui.slider("iterations", 1, 1024, &mut draw_params.max_iterations);
 
                             if changed {
                                 main_display.gl_window().window().request_redraw();
                             }
-
                         });
 
                     let gl_params_window = params_display.gl_window();
