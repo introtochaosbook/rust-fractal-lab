@@ -2,12 +2,12 @@ subroutine vec2 f_t(vec2 z);
 subroutine uniform f_t F;
 
 subroutine(f_t)
-vec2 FCosh(vec2 z) {
+vec2 FCos(vec2 z) {
     return complex_cos(z);
 }
 
 subroutine(f_t)
-vec2 FSinh(vec2 z) {
+vec2 FSin(vec2 z) {
     return complex_sin(z);
 }
 
