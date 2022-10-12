@@ -1,3 +1,4 @@
+use clap::Parser;
 use glium::glutin::dpi::PhysicalSize;
 use glium::glutin::event::{DeviceEvent, Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
@@ -7,6 +8,7 @@ use glium::index::{NoIndices, PrimitiveType};
 use glium::program::ShaderStage;
 use glium::uniforms::{UniformValue, Uniforms};
 use glium::{Display, Program, Surface, VertexBuffer};
+use rust_fractal_lab::args::JuliaArgs;
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 
@@ -25,7 +27,7 @@ struct DrawParams {
 }
 
 impl DrawParams {
-    fn new(dims: (u32, u32)) -> DrawParams {
+    fn new(dims: (u32, u32), args: &JuliaArgs) -> DrawParams {
         DrawParams {
             x_min: -2.0,
             x_max: 2.0,
@@ -34,8 +36,8 @@ impl DrawParams {
             width: dims.0 as f32,
             height: dims.1 as f32,
             max_colors: 10,
-            f: "FRabbit".into(),
-            color_map: "ColorMapInferno".into(),
+            f: args.function.subroutine_name(),
+            color_map: args.color_scheme.subroutine_name(),
         }
     }
 }
@@ -71,6 +73,8 @@ impl Uniforms for DrawParams {
 }
 
 fn main() {
+    let args = JuliaArgs::parse();
+
     let event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
@@ -123,7 +127,7 @@ void main() {
             _ => (),
         }
 
-        let draw_params = DrawParams::new(display.get_framebuffer_dimensions());
+        let draw_params = DrawParams::new(display.get_framebuffer_dimensions(), &args);
 
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);

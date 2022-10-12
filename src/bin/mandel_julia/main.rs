@@ -8,6 +8,7 @@ use glium::glutin::event::{
 use glium::glutin::ContextBuilder;
 use glium::{Display, Program, Surface, Texture2d, VertexBuffer};
 use std::time::Instant;
+use clap::Parser;
 
 use glium::texture::UnsignedTexture2d;
 use glium::uniforms::{UniformValue, Uniforms};
@@ -22,6 +23,7 @@ use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
 
 use ouroboros::self_referencing;
+use rust_fractal_lab::args::JuliaArgs;
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 
@@ -56,7 +58,7 @@ struct DrawParams {
 }
 
 impl DrawParams {
-    fn new(dims: (u32, u32)) -> DrawParams {
+    fn new(dims: (u32, u32), args: &JuliaArgs) -> DrawParams {
         DrawParams {
             x_min: -2.0,
             x_max: 2.0,
@@ -67,8 +69,8 @@ impl DrawParams {
             max_iterations: 1024,
             ranges: [0; 4],
             ranges_2: [0; 4],
-            color_map: "ColorMapTurbo".into(),
-            f: "FRabbit".into(),
+            f: args.function.subroutine_name(),
+            color_map: args.color_scheme.subroutine_name(),
             is_mandelbrot: false,
         }
     }
@@ -152,6 +154,8 @@ const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 768;
 
 fn main() {
+    let args = JuliaArgs::parse();
+
     let event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
@@ -250,7 +254,7 @@ void main() {
 
     let dim = main_display.get_framebuffer_dimensions();
     eprintln!("{:?}", dim);
-    let mut draw_params = DrawParams::new(main_display.get_framebuffer_dimensions());
+    let mut draw_params = DrawParams::new(main_display.get_framebuffer_dimensions(), &args);
 
     // Input variables.
     let mut mouse_down = false;
