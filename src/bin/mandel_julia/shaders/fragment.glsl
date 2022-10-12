@@ -3,7 +3,7 @@
 #extension GL_ARB_gpu_shader_fp64 : require
 
 out vec4 color;
-out uvec2 depth;
+out uvec2 pixel_iterations;
 
 uniform double xMin;
 uniform double xMax;
@@ -48,16 +48,16 @@ vec3 get_color(uint iterations) {
     return mix(colors[6], colors[7], fraction);
 }
 
-subroutine vec4 special_color_mode_t(uint i);
-subroutine uniform special_color_mode_t SpecialColorMode;
+subroutine vec4 colorize_t(uint i);
+subroutine uniform colorize_t Colorize;
 
-subroutine(special_color_mode_t)
-vec4 SpecialColorModeDefault(uint i) {
+subroutine(colorize_t)
+vec4 ColorizeDefault(uint i) {
     return vec4(get_color(i), 1);
 }
 
-subroutine(special_color_mode_t)
-vec4 SpecialColorModeCloud(uint i) {
+subroutine(colorize_t)
+vec4 ColorizeCloud(uint i) {
     switch (i / 2u) {
         // light grey
         case 4u: return vec4(211.0/255.0, 211.0/255.0, 211.0/255.0, 1);
@@ -68,8 +68,8 @@ vec4 SpecialColorModeCloud(uint i) {
     }
 }
 
-subroutine(special_color_mode_t)
-vec4 SpecialColorModeSnowflakes(uint i) {
+subroutine(colorize_t)
+vec4 ColorizeSnowflakes(uint i) {
     if (i >= 8u) {
         return vec4(0, 0, 0, 1);
     } else if (i >= 12u) {
@@ -96,10 +96,10 @@ void main() {
         }
 
         if (mag < escape) {
-            depth = uvec2(0, 1);
+            pixel_iterations = uvec2(0, 1);
             color = vec4(1, 1, 1, 1);
         } else {
-            depth = uvec2(i, 0);
+            pixel_iterations = uvec2(i, 0);
             color = vec4(get_color(i), 1);
         }
     } else {
@@ -108,7 +108,7 @@ void main() {
         const float attract = 0.0001;
 
         color = vec4(1, 1, 1, 1);
-        depth = uvec2(0, 1);
+        pixel_iterations = uvec2(0, 1);
 
         while (i++ < max_iterations) {
             // Apply function
@@ -119,8 +119,8 @@ void main() {
                 break;
             } else if (mag >= 100) {
                 // Point escaped
-                depth = uvec2(i, 0);
-                color = SpecialColorMode(i);
+                pixel_iterations = uvec2(i, 0);
+                color = Colorize(i);
                 break;
             }
         }

@@ -58,12 +58,12 @@ impl Uniforms for DrawParams {
             UniformValue::Subroutine(ShaderStage::Fragment, self.color_map.as_str()),
         );
         f(
-            "SpecialColorMode",
+            "Colorize",
             UniformValue::Subroutine(ShaderStage::Fragment, {
                 match self.f.as_str() {
-                    "FCloud" => "SpecialColorModeCloud",
-                    "FSnowflakes" => "SpecialColorModeSnowflakes",
-                    _ => "SpecialColorModeDefault",
+                    "FCloud" => "ColorizeCloud",
+                    "FSnowflakes" => "ColorizeSnowflakes",
+                    _ => "ColorizeDefault",
                 }
             }),
         );

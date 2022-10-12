@@ -1,7 +1,7 @@
 // Scaling code based on https://github.com/remexre/mandelbrot-rust-gl
 
 use glium::framebuffer::{MultiOutputFrameBuffer, ToColorAttachment};
-use glium::glutin::dpi::{LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize};
+use glium::glutin::dpi::{PhysicalPosition, PhysicalSize};
 use glium::glutin::event::{
     ElementState, Event, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode, WindowEvent,
 };
@@ -120,7 +120,10 @@ impl Uniforms for DrawParams {
         f("yMax", UniformValue::Double(self.y_max));
         f("width", UniformValue::Float(self.width));
         f("height", UniformValue::Float(self.height));
-        f("max_iterations", UniformValue::UnsignedInt(self.max_iterations));
+        f(
+            "max_iterations",
+            UniformValue::UnsignedInt(self.max_iterations),
+        );
         f("ranges", UniformValue::UnsignedIntVec4(self.ranges));
         f("ranges_2", UniformValue::UnsignedIntVec4(self.ranges_2));
         f(
@@ -132,12 +135,12 @@ impl Uniforms for DrawParams {
             UniformValue::Subroutine(ShaderStage::Fragment, self.f.as_str()),
         );
         f(
-            "SpecialColorMode",
+            "Colorize",
             UniformValue::Subroutine(ShaderStage::Fragment, {
                 match self.f.as_str() {
-                    "FCloud" => "SpecialColorModeCloud",
-                    "FSnowflakes" => "SpecialColorModeSnowflakes",
-                    _ => "SpecialColorModeDefault",
+                    "FCloud" => "ColorizeCloud",
+                    "FSnowflakes" => "ColorizeSnowflakes",
+                    _ => "ColorizeDefault",
                 }
             }),
         );
@@ -234,7 +237,10 @@ void main() {
         buffs_builder: |dt| {
             let output = [
                 ("color", dt.color_texture.to_color_attachment()),
-                ("depth", dt.iteration_texture.to_color_attachment()),
+                (
+                    "pixel_iterations",
+                    dt.iteration_texture.to_color_attachment(),
+                ),
             ];
             let framebuffer = MultiOutputFrameBuffer::new(&main_display, output).unwrap();
             (framebuffer, dt)
@@ -253,8 +259,6 @@ void main() {
     let mut renderer =
         Renderer::init(&mut imgui, &params_display).expect("Failed to initialize renderer");
     let mut last_frame = Instant::now();
-
-    let mut a = 1f32;
 
     event_loop.run(move |ev, _, control_flow| {
         *control_flow = ControlFlow::Wait;
@@ -290,11 +294,14 @@ void main() {
 
                         main_display.assert_no_error(None);
 
+                        // This call to unchecked_read requires our fork of glium. If you try vanilla
+                        // glium, it will fail to compile.
                         let p: Vec<Vec<(u32, u32)>> =
                             unsafe { dt.iteration_texture.unchecked_read() };
 
+                        // Create histogram using 3 significant figures (crate's recommended default)
                         let mut hist = Histogram::<u32>::new(3).unwrap();
-                        for p in p.clone().into_iter().flatten().filter(|b| b.1 != 1) {
+                        for p in p.into_iter().flatten().filter(|b| b.1 != 1) {
                             hist.record(p.0 as u64).unwrap();
                         }
 
@@ -367,14 +374,16 @@ void main() {
                             let mut changed = false;
 
                             let p = vec![1.0, 2.0, 3.0, 3.0, 3.0, 3.0];
-                            ui.plot_histogram("ABC", p.as_slice()).graph_size([300.0, 100.0]).build();
+                            ui.plot_histogram("ABC", p.as_slice())
+                                .graph_size([300.0, 100.0])
+                                .build();
                             changed |= ui.input_scalar("x_max", &mut draw_params.x_max).build();
-                            changed |= ui.slider("iterations", 1, 1024, &mut draw_params.max_iterations);
+                            changed |=
+                                ui.slider("iterations", 1, 1024, &mut draw_params.max_iterations);
 
                             if changed {
                                 main_display.gl_window().window().request_redraw();
                             }
-
                         });
 
                     let gl_params_window = params_display.gl_window();
