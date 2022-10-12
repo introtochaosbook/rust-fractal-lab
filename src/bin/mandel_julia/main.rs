@@ -424,8 +424,8 @@ void main() {
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
-                    main_display.gl_window().window().request_redraw();
                     if mouse_down {
+                        main_display.gl_window().window().request_redraw();
                         draw_params.pan(mouse_last.0 - position.x, position.y - mouse_last.1);
                     }
 
