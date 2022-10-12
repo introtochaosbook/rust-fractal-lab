@@ -100,7 +100,10 @@ impl DrawParams {
             },
             width: dims.0 as f32,
             height: dims.1 as f32,
-            max_iterations: 1024,
+            max_iterations: match args.julia_function {
+                Some(JuliaFunction::Snowflakes) => 27,
+                _ => 1024,
+            },
             ranges: [0; 4],
             ranges_2: [0; 4],
             f: args.julia_function.unwrap_or_default().subroutine_name(),
