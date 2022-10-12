@@ -1,4 +1,4 @@
-use clap::{ArgGroup, Parser, ValueEnum};
+use clap::{ValueEnum};
 
 #[derive(Clone, Copy, ValueEnum, strum_macros::Display)]
 pub enum JuliaFunction {
@@ -24,7 +24,7 @@ impl Default for JuliaFunction {
 
 impl JuliaFunction {
     pub fn subroutine_name(&self) -> String {
-        format!("F{}", self.to_string())
+        format!("F{}", self)
     }
 }
 
@@ -39,6 +39,6 @@ pub enum ColorScheme {
 
 impl ColorScheme {
     pub fn subroutine_name(&self) -> String {
-        format!("ColorMap{}", self.to_string())
+        format!("ColorMap{}", self)
     }
 }

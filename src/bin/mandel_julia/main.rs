@@ -13,7 +13,7 @@ use std::time::Instant;
 use glium::texture::UnsignedTexture2d;
 use glium::uniforms::{UniformValue, Uniforms};
 
-use clap::{ArgGroup, ValueEnum};
+use clap::{ArgGroup};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::index::{NoIndices, PrimitiveType};
