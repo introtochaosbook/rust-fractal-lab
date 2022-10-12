@@ -316,6 +316,9 @@ void main() {
         Renderer::init(&mut imgui, &params_display).expect("Failed to initialize renderer");
     let mut last_frame = Instant::now();
 
+    // Create histogram using 3 significant figures (crate's recommended default)
+    let mut hist = Histogram::<u32>::new(3).unwrap();
+
     event_loop.run(move |ev, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
@@ -355,8 +358,7 @@ void main() {
                         let p: Vec<Vec<(u32, u32)>> =
                             unsafe { dt.iteration_texture.unchecked_read() };
 
-                        // Create histogram using 3 significant figures (crate's recommended default)
-                        let mut hist = Histogram::<u32>::new(3).unwrap();
+                        hist.reset();
                         for p in p.into_iter().flatten().filter(|b| b.1 != 1) {
                             hist.record(p.0 as u64).unwrap();
                         }
@@ -429,8 +431,13 @@ void main() {
                         .build(|| {
                             let mut changed = false;
 
-                            let p = vec![1.0, 2.0, 3.0, 3.0, 3.0, 3.0];
-                            ui.plot_histogram("ABC", p.as_slice())
+                            // TODO: Only recalculate when the histogram actually changes
+                            let mut p = Vec::with_capacity(hist.max() as usize + 1);
+                            for i in 0..=hist.max() {
+                                p.push(hist.count_at(i) as f32);
+                            }
+
+                            ui.plot_histogram("Escape iteration counts", p.as_slice())
                                 .graph_size([300.0, 100.0])
                                 .build();
                             changed |= ui.input_scalar("x_max", &mut draw_params.x_max).build();
