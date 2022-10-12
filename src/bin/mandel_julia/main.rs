@@ -1,5 +1,6 @@
 // Scaling code based on https://github.com/remexre/mandelbrot-rust-gl
 
+use clap::Parser;
 use glium::framebuffer::{MultiOutputFrameBuffer, ToColorAttachment};
 use glium::glutin::dpi::{PhysicalPosition, PhysicalSize};
 use glium::glutin::event::{
@@ -8,11 +9,11 @@ use glium::glutin::event::{
 use glium::glutin::ContextBuilder;
 use glium::{Display, Program, Surface, Texture2d, VertexBuffer};
 use std::time::Instant;
-use clap::Parser;
 
 use glium::texture::UnsignedTexture2d;
 use glium::uniforms::{UniformValue, Uniforms};
 
+use clap::{ArgGroup, ValueEnum};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::index::{NoIndices, PrimitiveType};
@@ -21,11 +22,27 @@ use hdrhistogram::Histogram;
 use imgui::{Condition, Context};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
-
 use ouroboros::self_referencing;
-use rust_fractal_lab::args::JuliaArgs;
+use rust_fractal_lab::args::{ColorScheme, JuliaFunction};
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
+
+#[derive(Parser)]
+#[command(group(
+ArgGroup::new("mode")
+.required(true)
+.args(["is_mandelbrot", "julia_function"]),
+))]
+pub struct MandelJuliaArgs {
+    #[arg(short = 'm', long = "mandelbrot", default_value_t = false)]
+    is_mandelbrot: bool,
+
+    #[arg(value_enum)]
+    julia_function: Option<JuliaFunction>,
+
+    #[arg(value_enum, default_value_t = ColorScheme::Turbo, short, long)]
+    color_scheme: ColorScheme,
+}
 
 pub struct Dt {
     color_texture: Texture2d,
@@ -58,28 +75,64 @@ struct DrawParams {
 }
 
 impl DrawParams {
-    fn new(dims: (u32, u32), args: &JuliaArgs) -> DrawParams {
+    fn new(dims: (u32, u32), args: &MandelJuliaArgs) -> DrawParams {
         DrawParams {
             x_min: -2.0,
-            x_max: 2.0,
-            y_min: -2.0,
-            y_max: 2.0,
+            x_max: {
+                if args.is_mandelbrot {
+                    1.0
+                } else {
+                    2.0
+                }
+            },
+            y_min: {
+                if args.is_mandelbrot {
+                    -1.0
+                } else {
+                    -2.0
+                }
+            },
+            y_max: {
+                if args.is_mandelbrot {
+                    1.0
+                } else {
+                    2.0
+                }
+            },
             width: dims.0 as f32,
             height: dims.1 as f32,
             max_iterations: 1024,
             ranges: [0; 4],
             ranges_2: [0; 4],
-            f: args.function.subroutine_name(),
+            f: args.julia_function.unwrap_or_default().subroutine_name(),
             color_map: args.color_scheme.subroutine_name(),
-            is_mandelbrot: false,
+            is_mandelbrot: args.is_mandelbrot,
         }
     }
 
-    fn reset(&mut self) {
+    fn reset(&mut self, args: &MandelJuliaArgs) {
         self.x_min = -2.0;
-        self.x_max = 2.0;
-        self.y_min = -2.0;
-        self.y_max = 2.0;
+        self.x_max = {
+            if args.is_mandelbrot {
+                1.0
+            } else {
+                2.0
+            }
+        };
+        self.y_min = {
+            if args.is_mandelbrot {
+                -1.0
+            } else {
+                -2.0
+            }
+        };
+        self.y_max = {
+            if args.is_mandelbrot {
+                1.0
+            } else {
+                2.0
+            }
+        };
     }
 
     fn scroll(&mut self, x: f64, y: f64) {
@@ -154,7 +207,7 @@ const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 768;
 
 fn main() {
-    let args = JuliaArgs::parse();
+    let args = MandelJuliaArgs::parse();
 
     let event_loop = EventLoop::new();
 
@@ -452,7 +505,7 @@ void main() {
                         match keycode {
                             VirtualKeyCode::Minus => draw_params.zoom_out(),
                             VirtualKeyCode::Equals => draw_params.zoom_in(),
-                            VirtualKeyCode::Space => draw_params.reset(),
+                            VirtualKeyCode::Space => draw_params.reset(&args),
                             VirtualKeyCode::Up => draw_params.scroll(0.0, -1.0),
                             VirtualKeyCode::Left => draw_params.scroll(-1.0, 0.0),
                             VirtualKeyCode::Right => draw_params.scroll(1.0, 0.0),

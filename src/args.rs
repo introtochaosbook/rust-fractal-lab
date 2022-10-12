@@ -1,15 +1,6 @@
-use clap::{Parser, ValueEnum};
+use clap::{ArgGroup, Parser, ValueEnum};
 
-#[derive(Parser)]
-pub struct JuliaArgs {
-    #[arg(value_enum)]
-    pub function: JuliaFunction,
-
-    #[arg(value_enum, default_value_t = ColorScheme::Turbo, short, long)]
-    pub color_scheme: ColorScheme,
-}
-
-#[derive(Clone, ValueEnum, strum_macros::Display)]
+#[derive(Clone, Copy, ValueEnum, strum_macros::Display)]
 pub enum JuliaFunction {
     Cos,
     Sin,
@@ -23,6 +14,12 @@ pub enum JuliaFunction {
     Snowflakes,
     Dendrite,
     Ekg,
+}
+
+impl Default for JuliaFunction {
+    fn default() -> Self {
+        Self::Rabbit
+    }
 }
 
 impl JuliaFunction {

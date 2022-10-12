@@ -8,9 +8,18 @@ use glium::index::{NoIndices, PrimitiveType};
 use glium::program::ShaderStage;
 use glium::uniforms::{UniformValue, Uniforms};
 use glium::{Display, Program, Surface, VertexBuffer};
-use rust_fractal_lab::args::JuliaArgs;
+use rust_fractal_lab::args::{ColorScheme, JuliaFunction};
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
+
+#[derive(Parser)]
+pub struct JuliaArgs {
+    #[arg(value_enum)]
+    julia_function: JuliaFunction,
+
+    #[arg(value_enum, default_value_t = ColorScheme::Turbo, short, long)]
+    color_scheme: ColorScheme,
+}
 
 #[derive(Debug)]
 struct DrawParams {
@@ -36,7 +45,7 @@ impl DrawParams {
             width: dims.0 as f32,
             height: dims.1 as f32,
             max_colors: 10,
-            f: args.function.subroutine_name(),
+            f: args.julia_function.subroutine_name(),
             color_map: args.color_scheme.subroutine_name(),
         }
     }
