@@ -1,14 +1,12 @@
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{Event, WindowEvent};
+use glium::glutin::event_loop::ControlFlow::Wait;
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
-
-use glium::glutin::event_loop::ControlFlow::Wait;
 use glium::uniforms::{UniformValue, Uniforms};
 use glium::{implement_vertex, Display, DrawParameters, Program, Surface, VertexBuffer};
-
 use ndarray::{array, s, Array, Ix2};
 use rand::distributions::{Distribution, WeightedIndex};
 use rand::prelude::ThreadRng;

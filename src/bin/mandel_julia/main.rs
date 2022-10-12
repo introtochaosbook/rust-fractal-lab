@@ -1,23 +1,22 @@
 // Scaling code based on https://github.com/remexre/mandelbrot-rust-gl
 
+use std::time::Instant;
+
+use clap::ArgGroup;
 use clap::Parser;
 use glium::framebuffer::{MultiOutputFrameBuffer, ToColorAttachment};
 use glium::glutin::dpi::{PhysicalPosition, PhysicalSize};
 use glium::glutin::event::{
     ElementState, Event, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode, WindowEvent,
 };
-use glium::glutin::ContextBuilder;
-use glium::{Display, Program, Surface, Texture2d, VertexBuffer};
-use std::time::Instant;
-
-use glium::texture::UnsignedTexture2d;
-use glium::uniforms::{UniformValue, Uniforms};
-
-use clap::{ArgGroup};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
+use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 use glium::program::ShaderStage;
+use glium::texture::UnsignedTexture2d;
+use glium::uniforms::{UniformValue, Uniforms};
+use glium::{Display, Program, Surface, Texture2d, VertexBuffer};
 use hdrhistogram::Histogram;
 use imgui::{Condition, Context};
 use imgui_glium_renderer::Renderer;

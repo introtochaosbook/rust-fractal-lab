@@ -1,4 +1,3 @@
-use crate::ControlFlow::Wait;
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
@@ -6,9 +5,10 @@ use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 use glium::{Display, Program, Surface, VertexBuffer};
+use rand::Rng;
 use rust_fractal_lab::vertex::Vertex;
 
-use rand::Rng;
+use crate::ControlFlow::Wait;
 
 fn main() {
     let event_loop = EventLoop::new();

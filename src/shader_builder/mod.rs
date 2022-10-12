@@ -1,8 +1,9 @@
-use once_cell::sync::Lazy;
-use regex::{Captures, Regex};
 use std::borrow::Cow;
 use std::fs;
 use std::path::PathBuf;
+
+use once_cell::sync::Lazy;
+use regex::{Captures, Regex};
 
 static INCLUDE_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new("//\\s*<inject:(?P<file>[^>]+)>").unwrap());

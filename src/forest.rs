@@ -1,7 +1,8 @@
-use crate::ifs::IfsProgram;
 use ndarray::{array, Array, Ix2};
 use rand::prelude::ThreadRng;
 use rand::Rng;
+
+use crate::ifs::IfsProgram;
 
 pub fn draw_forest(program: &mut IfsProgram, rng: &mut ThreadRng, count: u32) {
     let d: Array<f32, Ix2> = array![

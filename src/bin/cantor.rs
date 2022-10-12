@@ -1,14 +1,15 @@
-use crate::ControlFlow::Wait;
+use std::iter::{self};
+
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
-use std::iter::{self};
-
 use glium::{Display, DrawParameters, Program, Surface, VertexBuffer};
 use rust_fractal_lab::vertex::Vertex;
+
+use crate::ControlFlow::Wait;
 
 struct Line(Vertex, Vertex);
 
