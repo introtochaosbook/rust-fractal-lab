@@ -1,4 +1,5 @@
 use std::time::Instant;
+use clap::Parser;
 
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
@@ -12,21 +13,39 @@ use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
 use rust_fractal_lab::vertex::Vertex;
 
+#[derive(Parser)]
+struct BifurcationArgs {
+    #[arg(default_value_t = false, short = 'p', long = "price")]
+    is_price: bool,
+}
+
 #[derive(Debug)]
 struct DrawParams {
     pan_hor: f32,
     pan_vert: f32,
     zoom: f32,
     c_range: [f32; 2],
+    is_price: bool,
 }
 
-impl Default for DrawParams {
-    fn default() -> DrawParams {
+impl DrawParams {
+    fn new(args: &BifurcationArgs) -> DrawParams {
+        if args.is_price {
         DrawParams {
             pan_vert: 0.5,
             zoom: 1.0,
             pan_hor: 4.0,
             c_range: [-2.0, 0.0],
+            is_price: args.is_price,
+        }
+        } else {
+            DrawParams {
+                pan_vert: 0.0,
+                zoom: 0.5,
+                pan_hor: 1.0,
+                c_range: [-2.0, -1.0],
+                is_price: args.is_price,
+            }
         }
     }
 }
@@ -37,10 +56,13 @@ impl Uniforms for DrawParams {
         f("zoom", UniformValue::Float(self.zoom));
         f("pan_hor", UniformValue::Float(self.pan_hor));
         f("c_range", UniformValue::Vec2(self.c_range));
+        f("is_price", UniformValue::Bool(self.is_price));
     }
 }
 
 fn main() {
+    let args = BifurcationArgs::parse();
+
     let title = "Bifurcation diagram";
 
     let event_loop = EventLoop::new();
@@ -95,7 +117,7 @@ void main() {
     )
     .unwrap();
 
-    let mut draw_params = DrawParams::default();
+    let mut draw_params = DrawParams::new(&args);
 
     let mut renderer = Renderer::init(&mut imgui, &display).expect("Failed to initialize renderer");
 
@@ -129,7 +151,7 @@ void main() {
                         .build_array(&mut draw_params.c_range);
 
                     if ui.button("Reset") {
-                        draw_params = DrawParams::default();
+                        draw_params = DrawParams::new(&args);
                     }
                 });
 

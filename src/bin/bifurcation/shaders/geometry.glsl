@@ -10,6 +10,7 @@ uniform float zoom;
 uniform float height;
 
 uniform vec2 c_range;
+uniform bool is_price;
 
 float map(float x, float in_min, float in_max, float out_min, float out_max) {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -23,9 +24,13 @@ void main()
     // Use x to sweep c across its range
     float c = map(x, -1.0, 1.0, c_range[0], c_range[1]);
 
-    float f_x = 0.9;
+    float f_x = is_price ? 0.9 : 0.0;
     for (int i = 0; i < MAX_VERTICES; i++) {
-        f_x = c*f_x - c*pow(f_x, 2);
+        if (is_price) {
+            f_x = c * f_x - c * pow(f_x, 2);
+        } else {
+            f_x = pow(f_x, 2) + c;
+        }
 
         if (i > 50) {
             float f_x_remapped = (f_x - pan_vert) * zoom;
