@@ -1,3 +1,10 @@
+use clap::Parser;
+
+#[derive(Parser)]
+struct Args {
+    input: i64,
+}
+
 fn fibo(n: i64) -> i64 {
     match n {
         0 => 0,
@@ -7,7 +14,6 @@ fn fibo(n: i64) -> i64 {
 }
 
 fn main() {
-    let input: String = std::env::args().nth(1).unwrap();
-    let i: i64 = input.parse().unwrap();
-    println!("fibo({}) = {}", i, fibo(i));
+    let args = Args::parse();
+    println!("fibo({}) = {}", args.input, fibo(args.input));
 }
