@@ -97,7 +97,7 @@ void main() {
 
         if (mag < escape) {
             pixel_iterations = uvec2(0, 1);
-            color = vec4(1, 1, 1, 1);
+            color = vec4(0, 0, 0, 0);
         } else {
             pixel_iterations = uvec2(i, 0);
             color = vec4(get_color(i), 1);
