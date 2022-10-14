@@ -1,5 +1,5 @@
-use std::time::Instant;
 use clap::Parser;
+use std::time::Instant;
 
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
@@ -31,13 +31,13 @@ struct DrawParams {
 impl DrawParams {
     fn new(args: &BifurcationArgs) -> DrawParams {
         if args.is_price {
-        DrawParams {
-            pan_vert: 0.5,
-            zoom: 1.0,
-            pan_hor: 4.0,
-            c_range: [-2.0, 0.0],
-            is_price: args.is_price,
-        }
+            DrawParams {
+                pan_vert: 0.5,
+                zoom: 1.0,
+                pan_hor: 4.0,
+                c_range: [-2.0, 0.0],
+                is_price: args.is_price,
+            }
         } else {
             DrawParams {
                 pan_vert: 0.0,

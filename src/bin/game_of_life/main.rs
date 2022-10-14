@@ -1,18 +1,35 @@
+use glium::framebuffer::SimpleFrameBuffer;
 use glium::glutin::dpi::{LogicalSize, PhysicalSize};
 use glium::glutin::event::{DeviceEvent, Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
-use glium::uniforms::{UniformValue, Uniforms};
-use glium::{Display, Program, Surface, Texture2d, uniform, VertexBuffer};
 use glium::texture::RawImage2d;
+use glium::uniforms::{UniformValue, Uniforms};
+use glium::{uniform, Display, Program, Surface, Texture2d, VertexBuffer};
 use imgui::StyleColor::Text;
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 768;
+
+pub struct Dt {
+    textures: [glium::texture::Texture2d; 2],
+}
+
+#[ouroboros::self_referencing]
+struct Data {
+    dt: Dt,
+    #[borrows(dt)]
+    #[covariant]
+    buffs: (
+        glium::framebuffer::SimpleFrameBuffer<'this>,
+        glium::framebuffer::SimpleFrameBuffer<'this>,
+        &'this Dt,
+    ),
+}
 
 fn main() {
     let event_loop = EventLoop::new();
@@ -62,6 +79,19 @@ fn main() {
 
     let last_texture = Texture2d::empty(&display, WINDOW_WIDTH, WINDOW_HEIGHT).unwrap();
 
+    let mut tenants = DataBuilder {
+        dt: Dt {
+            textures: [back_texture, last_texture],
+        },
+        buffs_builder: |dt| {
+            let a = SimpleFrameBuffer::new(&display, &dt.textures[0]).unwrap();
+            let b = SimpleFrameBuffer::new(&display, &dt.textures[1]).unwrap();
+
+            (a, b, dt)
+        },
+    }
+    .build();
+
     let program = Program::from_source(
         &display,
         r##"#version 140
@@ -73,7 +103,7 @@ void main() {
         &build_shader(include_str!("shaders/fragment.glsl")),
         None,
     )
-        .unwrap();
+    .unwrap();
 
     let program2 = Program::from_source(
         &display,
@@ -86,7 +116,7 @@ void main() {
         &build_shader(include_str!("shaders/fragment-2.glsl")),
         None,
     )
-        .unwrap();
+    .unwrap();
 
     event_loop.run(move |ev, _, control_flow| {
         *control_flow = ControlFlow::Wait;
@@ -105,37 +135,42 @@ void main() {
             _ => (),
         }
 
-        let draw_params = uniform! {
-            state: &back_texture,
-            scale: [WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4],
-        };
+        tenants.with_mut(|fields| {
+            let a = &mut fields.buffs.0;
+            let b = &mut fields.buffs.1;
+            let dt = fields.dt;
 
-        last_texture.as_surface().draw(
-            &vertex_buffer,
-            &indices,
-            &program,
-            &draw_params,
-            &Default::default(),
-        )
-            .unwrap();
-        last_texture.sync_shader_writes_for_surface();
+            let draw_params = uniform! {
+                state: &dt.textures[0],
+                scale: [WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4],
+            };
 
-        let draw_params = uniform! {
-            state: &last_texture,
-            scale: [WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4],
-        };
-
-        let mut target = display.draw();
-        target.clear_color(0.0, 0.0, 0.0, 1.0);
-        target
-            .draw(
+            b.draw(
                 &vertex_buffer,
                 &indices,
-                &program2,
+                &program,
                 &draw_params,
                 &Default::default(),
             )
             .unwrap();
-        target.finish().unwrap();
+
+            let draw_params = uniform! {
+                state: &dt.textures[0],
+                scale: [WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4],
+            };
+
+            let mut target = display.draw();
+            target.clear_color(0.0, 0.0, 0.0, 1.0);
+            target
+                .draw(
+                    &vertex_buffer,
+                    &indices,
+                    &program2,
+                    &draw_params,
+                    &Default::default(),
+                )
+                .unwrap();
+            target.finish().unwrap();
+        });
     });
 }
