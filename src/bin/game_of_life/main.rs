@@ -5,10 +5,8 @@ use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
-use glium::texture::RawImage2d;
 use glium::uniforms::{UniformValue, Uniforms};
-use glium::{uniform, Display, Program, Surface, Texture2d, VertexBuffer};
-use imgui::StyleColor::Text;
+use glium::{uniform, Display, Program, Surface, Texture2d, VertexBuffer, implement_vertex};
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 
@@ -16,7 +14,7 @@ const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 768;
 
 pub struct Dt {
-    textures: [glium::texture::Texture2d; 2],
+    textures: [Texture2d; 2],
 }
 
 #[ouroboros::self_referencing]
@@ -51,16 +49,6 @@ fn main() {
         [-1.0, 1.0].into(),
     ];
 
-    let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
-    let indices = NoIndices(PrimitiveType::TrianglesList);
-
-    // let back_texture = Texture2d::empty(
-    //     &display,
-    //     WINDOW_WIDTH,
-    //     WINDOW_HEIGHT,
-    // )
-    //     .unwrap();
-
     let mut row = Vec::with_capacity((WINDOW_WIDTH) as usize);
     for i in 0..WINDOW_WIDTH {
         if i % 2 == 0 {
@@ -75,9 +63,9 @@ fn main() {
         pixels.push(row.clone());
     }
 
-    let back_texture = Texture2d::new(&display, pixels).unwrap();
+    let back_texture = Texture2d::with_mipmaps(&display, pixels, glium::texture::MipmapsOption::NoMipmap,).unwrap();
 
-    let last_texture = Texture2d::empty(&display, WINDOW_WIDTH, WINDOW_HEIGHT).unwrap();
+    let last_texture = Texture2d::empty_with_mipmaps(&display, glium::texture::MipmapsOption::NoMipmap, WINDOW_WIDTH, WINDOW_HEIGHT).unwrap();
 
     let mut tenants = DataBuilder {
         dt: Dt {
@@ -140,11 +128,17 @@ void main() {
             let b = &mut fields.buffs.1;
             let dt = fields.dt;
 
+            // Use random source texture as input
             let draw_params = uniform! {
                 state: &dt.textures[0],
                 scale: [WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4],
             };
 
+            let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
+            let indices = NoIndices(PrimitiveType::TrianglesList);
+
+
+            // Draw to b fbo, which stores results in second texture
             b.draw(
                 &vertex_buffer,
                 &indices,
@@ -153,23 +147,28 @@ void main() {
                 &Default::default(),
             )
             .unwrap();
+            //
+            // let draw_params = uniform! {
+            //     state: &dt.textures[1],
+            //     scale: [WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4],
+            // };
 
-            let draw_params = uniform! {
-                state: &dt.textures[0],
-                scale: [WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4],
-            };
+
+            //let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
+            //let indices = NoIndices(PrimitiveType::TrianglesList);
 
             let mut target = display.draw();
             target.clear_color(0.0, 0.0, 0.0, 1.0);
-            target
-                .draw(
-                    &vertex_buffer,
-                    &indices,
-                    &program2,
-                    &draw_params,
-                    &Default::default(),
-                )
-                .unwrap();
+            dt.textures[0].as_surface().fill(&target, glium::uniforms::MagnifySamplerFilter::Nearest);
+            // target
+            //     .draw(
+            //         &vertex_buffer,
+            //         &indices,
+            //         &program2,
+            //         &draw_params,
+            //         &Default::default(),
+            //     )
+            //     .unwrap();
             target.finish().unwrap();
         });
     });

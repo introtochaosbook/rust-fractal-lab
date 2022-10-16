@@ -5,8 +5,10 @@ out vec4 color;
 uniform sampler2D state;
 uniform uvec2 scale;
 
+in vec2 v_tex_coords;
+
 int get(int x, int y) {
-    return int(texture2D(state, (gl_FragCoord.xy + vec2(x, y)) / scale).r);
+    return int(texture2D(state, v_tex_coords));
 }
 
 void main() {
