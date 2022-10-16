@@ -1,15 +1,14 @@
 use glium::framebuffer::SimpleFrameBuffer;
-use glium::glutin::dpi::{LogicalSize, PhysicalSize};
-use glium::glutin::event::{DeviceEvent, Event, StartCause, WindowEvent};
+use glium::glutin::dpi::{PhysicalPosition, PhysicalSize};
+use glium::glutin::event::{
+    DeviceEvent, ElementState, Event, MouseButton, StartCause, WindowEvent,
+};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
-use glium::index::{NoIndices, PrimitiveType};
-use glium::texture::RawImage2d;
-use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, UniformValue, Uniforms};
-use glium::{
-    implement_vertex, uniform, Display, DrawParameters, Program, Surface, Texture2d, VertexBuffer,
-};
+use glium::index::PrimitiveType;
+use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Uniforms};
+use glium::{implement_vertex, uniform, Display, Program, Rect, Surface, Texture2d, VertexBuffer};
 use rand::Rng;
 use rust_fractal_lab::shader_builder::build_shader;
 use static_assertions::const_assert_eq;
@@ -20,20 +19,13 @@ use std::time::{Duration, Instant};
 #[derive(Copy, Clone)]
 struct Vertex {
     position: [f32; 2],
-    tex_coords: [f32; 2], // <- this is new
+    tex_coords: [f32; 2],
 }
 
-implement_vertex!(Vertex, position, tex_coords); // don't forget to add `tex_coords` here
-                                                 //
-                                                 // impl From<[f32; 2]> for Vertex {
-                                                 //     fn from(x: [f32; 2]) -> Self {
-                                                 //         Vertex { position: x, tex_coords: [] }
-                                                 //     }
-                                                 // }
-                                                 //
+implement_vertex!(Vertex, position, tex_coords);
 
 const WINDOW_WIDTH: u32 = 1024;
-const WINDOW_HEIGHT: u32 = 768;
+const WINDOW_HEIGHT: u32 = 1024;
 const SCALE: u32 = 4;
 
 const_assert_eq!(WINDOW_WIDTH % SCALE, 0);
@@ -61,7 +53,8 @@ fn main() {
 
     let wb = WindowBuilder::new()
         .with_inner_size(PhysicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT))
-        .with_title("Hello world");
+        .with_title("Hello world")
+        .with_resizable(false);
 
     let cb = ContextBuilder::new();
 
@@ -90,8 +83,8 @@ fn main() {
     let mut pixels = Vec::with_capacity((WINDOW_HEIGHT / SCALE) as usize);
     for _ in 0..WINDOW_HEIGHT / SCALE {
         let mut row = Vec::with_capacity((WINDOW_WIDTH / SCALE) as usize);
-        for i in 0..WINDOW_WIDTH / SCALE {
-            if rng.gen_bool(0.5) {
+        for _ in 0..WINDOW_WIDTH / SCALE {
+            if rng.gen_bool(0.3) {
                 row.push((255.0, 255.0, 255.0, 255.0));
             } else {
                 row.push((0.0, 0.0, 0.0, 255.0));
@@ -160,11 +153,52 @@ void main() {
     let mut a = 0;
     let mut b = 1;
 
+    let mut cursor_position: Option<PhysicalPosition<i32>> = None;
+    let mut pressed = false;
+
     event_loop.run(move |ev, _, control_flow| {
         match ev {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::CloseRequested => {
                     *control_flow = ControlFlow::Exit;
+                    return;
+                }
+                WindowEvent::MouseInput { button: MouseButton::Left, state, .. } => {
+                    match state {
+                        ElementState::Pressed => pressed = true,
+                        ElementState::Released => { pressed = false;
+                            let mut data = Vec::new();
+                            for _ in 0..1 {
+                                data.push((255.0, 255.0, 255.0, 255.0));
+                            }
+                            let mut data2 = Vec::new();
+                            for _ in 0..1 {
+                                data2.push(data.clone());
+                            }
+                            tenants.with_mut(|fields| {
+                                let dt = fields.dt;
+                                dt.textures[a].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data2)
+                            });
+                        },
+                    }
+                }
+                WindowEvent::CursorMoved { position, .. } => {
+                    cursor_position = Some(position.cast::<i32>().into());
+                    if pressed {
+                        let mut data = Vec::new();
+                        for _ in 0..1 {
+                            data.push((255.0, 255.0, 255.0, 255.0));
+                        }
+                        let mut data2 = Vec::new();
+                        for _ in 0..1 {
+                            data2.push(data.clone());
+                        }
+                        tenants.with_mut(|fields| {
+                            let dt = fields.dt;
+                            dt.textures[a].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data2)
+                        });
+                    }
+
                     return;
                 }
                 _ => return,
@@ -178,10 +212,11 @@ void main() {
                 StartCause::Init => {}
                 _ => return,
             },
+            Event::RedrawRequested(..) => {}
             _ => return,
         }
 
-        *control_flow = ControlFlow::WaitUntil(Instant::now().add(Duration::from_millis(100)));
+        *control_flow = ControlFlow::WaitUntil(Instant::now().add(Duration::from_millis(10)));
 
         eprintln!("drawing...");
         tenants.with_mut(|fields| {
@@ -215,7 +250,7 @@ void main() {
 
             let draw_params = uniform! {
                 state: glium::uniforms::Sampler::new(&dt.textures[b]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
-                scale: [WINDOW_WIDTH / SCALE, WINDOW_HEIGHT / SCALE],
+                scale: [WINDOW_WIDTH, WINDOW_HEIGHT],
             };
 
             let mut target = display.draw();
