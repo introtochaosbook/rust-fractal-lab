@@ -6,23 +6,16 @@ use glium::glutin::event::{
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
-use glium::index::PrimitiveType;
+use glium::index::{NoIndices, PrimitiveType};
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Uniforms};
-use glium::{implement_vertex, uniform, Display, Program, Rect, Surface, Texture2d, VertexBuffer};
+use glium::{uniform, Display, Program, Rect, Surface, Texture2d, VertexBuffer};
 use rand::Rng;
 use rust_fractal_lab::shader_builder::build_shader;
 use static_assertions::const_assert_eq;
 use std::mem::swap;
 use std::ops::Add;
 use std::time::{Duration, Instant};
-
-#[derive(Copy, Clone)]
-struct Vertex {
-    position: [f32; 2],
-    tex_coords: [f32; 2],
-}
-
-implement_vertex!(Vertex, position, tex_coords);
+use rust_fractal_lab::vertex::Vertex;
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 1024;
@@ -60,23 +53,13 @@ fn main() {
 
     let display = Display::new(wb, cb, &event_loop).unwrap();
 
-    let vertices: [Vertex; 4] = [
-        Vertex {
-            position: [-1.0, -1.0],
-            tex_coords: [0.0, 0.0],
-        },
-        Vertex {
-            position: [-1.0, 1.0],
-            tex_coords: [0.0, 1.0],
-        },
-        Vertex {
-            position: [1.0, 1.0],
-            tex_coords: [1.0, 1.0],
-        },
-        Vertex {
-            position: [1.0, -1.0],
-            tex_coords: [1.0, 0.0],
-        },
+    let vertices: [Vertex; 6] = [
+        [1.0, -1.0].into(),
+        [-1.0, 1.0].into(),
+        [-1.0, -1.0].into(),
+        [1.0, 1.0].into(),
+        [1.0, -1.0].into(),
+        [-1.0, 1.0].into(),
     ];
 
     // TODO improve
@@ -220,12 +203,7 @@ void main() {
             };
 
             let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
-            let indices = glium::IndexBuffer::new(
-                &display,
-                PrimitiveType::TriangleStrip,
-                &[1 as u16, 2, 0, 3],
-            )
-                .unwrap();
+            let indices = NoIndices(PrimitiveType::TrianglesList);
 
             // Compute b from a
             dt.textures[b]
