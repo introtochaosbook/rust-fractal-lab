@@ -118,17 +118,16 @@ fn main() {
     }
     .build();
 
-    let program = Program::from_source(
-        &display,
-        r##"#version 140
+    let vertex_shader = r##"#version 140
 in vec2 position;
-in vec2 tex_coords;
-out vec2 v_tex_coords;
 void main() {
 	gl_Position = vec4(position, 0.0, 1.0);
-	v_tex_coords = tex_coords;
 }
-"##,
+"##;
+
+    let program = Program::from_source(
+        &display,
+        vertex_shader,
         &build_shader(include_str!("shaders/fragment.glsl")),
         None,
     )
@@ -136,15 +135,7 @@ void main() {
 
     let program2 = Program::from_source(
         &display,
-        r##"#version 140
-in vec2 position;
-in vec2 tex_coords;
-out vec2 v_tex_coords;
-void main() {
-	gl_Position = vec4(position, 0.0, 1.0);
-	v_tex_coords = tex_coords;
-}
-"##,
+        vertex_shader,
         &build_shader(include_str!("shaders/fragment-2.glsl")),
         None,
     )

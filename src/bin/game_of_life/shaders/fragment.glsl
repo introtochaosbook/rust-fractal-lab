@@ -5,8 +5,6 @@ out vec4 color;
 uniform sampler2D state;
 uniform uvec2 scale;
 
-layout(pixel_center_integer) in vec4 gl_FragCoord;
-
 int get(int x, int y) {
     return int(texture(state, (gl_FragCoord.xy + vec2(x, y)) / scale).r);
 }
