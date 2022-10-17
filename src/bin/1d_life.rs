@@ -32,7 +32,7 @@ impl Rule for Rule2 {
 
 impl State {
     /// Parse state from input string containing stars, spaces, and/or repeat directives.
-    /// This portion of the code is a bit complicated because of the handling for repeat directives.
+    /// This is a bit complicated because of the handling for repeat directives.
     pub fn parse<T: AsRef<str>>(input: T) -> Self {
         let input = input.as_ref();
         let mut rng = rand::thread_rng();
@@ -57,9 +57,7 @@ impl State {
                 // Account for closing square bracket
                 start = char.end() + 1;
 
-                let char = char.as_str();
-                assert_eq!(char.len(), 1);
-                let repetition_char = char.chars().nth(0).unwrap();
+                let repetition_char = char.as_str().chars().nth(0).unwrap();
                 // This needs to be a closure, otherwise using '?' would result in repeating the
                 // same character, which isn't very random.
                 let repeater = || match repetition_char {
@@ -89,6 +87,7 @@ impl State {
             }
         }
 
+        // Ensure we consumed all of the input
         if start != input.len() {
             panic!("unparsed input at pos {}: '{}'", start, &input[start..]);
         }
@@ -111,8 +110,6 @@ impl State {
     }
 }
 
-
-
 impl Display for State {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for c in self.0.iter() {
@@ -130,16 +127,20 @@ impl Display for State {
 #[derive(Parser)]
 struct Args {
     input: String,
+
+    #[clap(short, long, default_value_t = 25)]
+    iterations: u32,
 }
 
 fn main() {
     let args = Args::parse();
 
-    let mut input = State::parse(args.input);
-    eprintln!("{}", input);
-    for _ in 0..250 {
-        input = input.next::<Rule2>();
-        eprintln!("{}", input);
+    let mut state = State::parse(args.input);
+    println!("{}", state);
+
+    for _ in 0..args.iterations {
+        state = state.next::<Rule2>();
+        println!("{}", state);
     }
 }
 
