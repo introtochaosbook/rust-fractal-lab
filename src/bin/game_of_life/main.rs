@@ -11,18 +11,23 @@ use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Uniforms};
 use glium::{uniform, Display, Program, Rect, Surface, Texture2d, VertexBuffer};
 use rand::Rng;
 use rust_fractal_lab::shader_builder::build_shader;
+use rust_fractal_lab::vertex::Vertex;
 use static_assertions::const_assert_eq;
 use std::mem::swap;
 use std::ops::Add;
 use std::time::{Duration, Instant};
-use rust_fractal_lab::vertex::Vertex;
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 1024;
-const SCALE: u32 = 4;
+const SCALE: u32 = 16;
 
+// Height and width should be divisible by scale
 const_assert_eq!(WINDOW_WIDTH % SCALE, 0);
 const_assert_eq!(WINDOW_HEIGHT % SCALE, 0);
+
+// Height and width must be powers of 2 for wraparound to work
+const_assert_eq!(WINDOW_WIDTH & (WINDOW_WIDTH - 1), 0);
+const_assert_eq!(WINDOW_HEIGHT & (WINDOW_HEIGHT - 1), 0);
 
 pub struct Dt {
     textures: [Texture2d; 2],
