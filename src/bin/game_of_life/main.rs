@@ -1,3 +1,7 @@
+use std::mem::swap;
+use std::ops::Add;
+use std::time::{Duration, Instant};
+
 use glium::framebuffer::SimpleFrameBuffer;
 use glium::glutin::dpi::{PhysicalPosition, PhysicalSize};
 use glium::glutin::event::{
@@ -9,14 +13,11 @@ use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Uniforms};
 use glium::{uniform, Display, Program, Rect, Surface, Texture2d, VertexBuffer};
+use rand::distributions::Bernoulli;
 use rand::Rng;
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
 use static_assertions::const_assert_eq;
-use std::mem::swap;
-use std::ops::Add;
-use std::time::{Duration, Instant};
-use rand::distributions::Bernoulli;
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 1024;

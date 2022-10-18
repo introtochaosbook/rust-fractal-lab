@@ -1,6 +1,6 @@
-use clap::Parser;
 use std::time::Instant;
 
+use clap::Parser;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;

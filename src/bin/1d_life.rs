@@ -29,7 +29,6 @@ impl Rule for Rule2 {
     }
 }
 
-
 impl State {
     /// Parse state from input string containing stars, spaces, and/or repeat directives.
     /// This is a bit complicated because of the handling for repeat directives.
@@ -48,7 +47,11 @@ impl State {
             if let Some(count) = m.name("count") {
                 if count.start() != start {
                     eprintln!("{} != {}", count.start(), start);
-                    panic!("unparsed input at pos {}: '{}'", start, &input[start..count.start()]);
+                    panic!(
+                        "unparsed input at pos {}: '{}'",
+                        start,
+                        &input[start..count.start()]
+                    );
                 }
 
                 let repetition_count: usize = count.as_str().parse().unwrap();
@@ -64,13 +67,20 @@ impl State {
                     STAR_CHAR => true,
                     ' ' => false,
                     '?' => rng.gen_bool(0.5),
-                    c => panic!("unexpected char '{}' in repetition '{}[{}]'", c, repetition_count, c),
+                    c => panic!(
+                        "unexpected char '{}' in repetition '{}[{}]'",
+                        c, repetition_count, c
+                    ),
                 };
 
                 ret.extend(std::iter::repeat_with(repeater).take(repetition_count));
             } else if let Some(single) = m.name("single") {
                 if single.start() != start {
-                    panic!("unparsed input at pos {}: '{}'", start, &input[start..single.start()]);
+                    panic!(
+                        "unparsed input at pos {}: '{}'",
+                        start,
+                        &input[start..single.start()]
+                    );
                 }
 
                 start = single.end();
@@ -146,9 +156,10 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use crate::State;
     use bitvec::bitvec;
     use bitvec::prelude::Lsb0;
+
+    use crate::State;
 
     #[test]
     fn parse() {
