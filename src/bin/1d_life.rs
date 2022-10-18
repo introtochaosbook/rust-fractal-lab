@@ -60,7 +60,7 @@ impl State {
                 // Account for closing square bracket
                 start = char.end() + 1;
 
-                let repetition_char = char.as_str().chars().nth(0).unwrap();
+                let repetition_char = char.as_str().chars().next().unwrap();
                 // This needs to be a closure, otherwise using '?' would result in repeating the
                 // same character, which isn't very random.
                 let repeater = || match repetition_char {
@@ -85,7 +85,7 @@ impl State {
 
                 start = single.end();
 
-                let c = single.as_str().chars().nth(0).unwrap();
+                let c = single.as_str().chars().next().unwrap();
                 match c {
                     STAR_CHAR => ret.push(true),
                     ' ' => ret.push(false),

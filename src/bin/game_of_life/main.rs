@@ -11,7 +11,7 @@ use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
-use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Uniforms};
+use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use glium::{uniform, Display, Program, Rect, Surface, Texture2d, VertexBuffer};
 use rand::distributions::Bernoulli;
 use rand::Rng;
@@ -165,7 +165,7 @@ void main() {
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
-                    cursor_position = Some(position.cast::<i32>().into());
+                    cursor_position = Some(position.cast::<i32>());
                     if pressed {
                         let mut data = Vec::new();
                         for _ in 0..1 {
