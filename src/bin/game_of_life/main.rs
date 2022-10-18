@@ -16,6 +16,7 @@ use static_assertions::const_assert_eq;
 use std::mem::swap;
 use std::ops::Add;
 use std::time::{Duration, Instant};
+use rand::distributions::Bernoulli;
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 1024;
@@ -69,10 +70,11 @@ fn main() {
 
     // TODO improve
     let mut pixels = Vec::with_capacity((WINDOW_HEIGHT / SCALE) as usize);
+    let dist = Bernoulli::new(0.3).unwrap();
     for _ in 0..WINDOW_HEIGHT / SCALE {
         let mut row = Vec::with_capacity((WINDOW_WIDTH / SCALE) as usize);
         for _ in 0..WINDOW_WIDTH / SCALE {
-            if rng.gen_bool(0.3) {
+            if rng.sample(&dist) {
                 row.push((255.0, 255.0, 255.0, 255.0));
             } else {
                 row.push((0.0, 0.0, 0.0, 255.0));
