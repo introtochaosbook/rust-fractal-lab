@@ -36,7 +36,7 @@ fn main() {
     let event_loop = EventLoop::new();
 
     let wb = WindowBuilder::new()
-        .with_inner_size(PhysicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT))
+        .with_inner_size_centered(PhysicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT), &event_loop)
         .with_title("Hello world")
         .with_resizable(false);
 
