@@ -2,7 +2,6 @@ use std::mem::swap;
 use std::ops::Add;
 use std::time::{Duration, Instant};
 
-use glium::framebuffer::SimpleFrameBuffer;
 use glium::glutin::dpi::{PhysicalPosition, PhysicalSize};
 use glium::glutin::event::{
     DeviceEvent, ElementState, Event, MouseButton, StartCause, WindowEvent,
@@ -30,22 +29,6 @@ const_assert_eq!(WINDOW_HEIGHT % SCALE, 0);
 // Height and width must be powers of 2 for wraparound to work
 const_assert_eq!(WINDOW_WIDTH & (WINDOW_WIDTH - 1), 0);
 const_assert_eq!(WINDOW_HEIGHT & (WINDOW_HEIGHT - 1), 0);
-
-pub struct Dt {
-    textures: [Texture2d; 2],
-}
-
-#[ouroboros::self_referencing]
-struct Data {
-    dt: Dt,
-    #[borrows(dt)]
-    #[covariant]
-    buffs: (
-        glium::framebuffer::SimpleFrameBuffer<'this>,
-        glium::framebuffer::SimpleFrameBuffer<'this>,
-        &'this Dt,
-    ),
-}
 
 fn main() {
     let event_loop = EventLoop::new();
@@ -96,18 +79,7 @@ fn main() {
     )
     .unwrap();
 
-    let mut tenants = DataBuilder {
-        dt: Dt {
-            textures: [back_texture, last_texture],
-        },
-        buffs_builder: |dt| {
-            let a = SimpleFrameBuffer::new(&display, &dt.textures[0]).unwrap();
-            let b = SimpleFrameBuffer::new(&display, &dt.textures[1]).unwrap();
-
-            (a, b, dt)
-        },
-    }
-    .build();
+    let textures = [back_texture, last_texture];
 
     let vertex_shader = r##"#version 140
 in vec2 position;
@@ -157,10 +129,8 @@ void main() {
                             for _ in 0..1 {
                                 data2.push(data.clone());
                             }
-                            tenants.with_mut(|fields| {
-                                let dt = fields.dt;
-                                dt.textures[a].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data2)
-                            });
+                            
+                            textures[a].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data2)
                         },
                     }
                 }
@@ -175,10 +145,8 @@ void main() {
                         for _ in 0..1 {
                             data2.push(data.clone());
                         }
-                        tenants.with_mut(|fields| {
-                            let dt = fields.dt;
-                            dt.textures[a].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data2)
-                        });
+
+                        textures[a].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data2)
                     }
 
                     return;
@@ -201,12 +169,10 @@ void main() {
         *control_flow = ControlFlow::WaitUntil(Instant::now().add(Duration::from_millis(10)));
 
         eprintln!("drawing...");
-        tenants.with_mut(|fields| {
-            let dt = fields.dt;
 
             // Input is a
             let draw_params = uniform! {
-                state: glium::uniforms::Sampler::new(&dt.textures[a]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
+                state: glium::uniforms::Sampler::new(&textures[a]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
                 scale: [WINDOW_WIDTH / SCALE, WINDOW_HEIGHT / SCALE],
             };
 
@@ -214,7 +180,7 @@ void main() {
             let indices = NoIndices(PrimitiveType::TrianglesList);
 
             // Compute b from a
-            dt.textures[b]
+            textures[b]
                 .as_surface()
                 .draw(
                     &vertex_buffer,
@@ -226,7 +192,7 @@ void main() {
                 .unwrap();
 
             let draw_params = uniform! {
-                state: glium::uniforms::Sampler::new(&dt.textures[b]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
+                state: glium::uniforms::Sampler::new(&textures[b]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
                 scale: [WINDOW_WIDTH, WINDOW_HEIGHT],
             };
 
@@ -245,6 +211,5 @@ void main() {
             target.finish().unwrap();
 
             swap(&mut a, &mut b);
-        });
     });
 }
