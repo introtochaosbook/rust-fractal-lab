@@ -10,11 +10,13 @@ use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
+use glium::texture::RawImage2d;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use glium::{uniform, Display, Program, Rect, Surface, Texture2d, VertexBuffer};
 use rand::distributions::Bernoulli;
-use rand::Rng;
+use rand::distributions::Distribution;
 use rust_fractal_lab::shader_builder::build_shader;
+use rust_fractal_lab::utils::winit::WindowBuilderHelpers;
 use rust_fractal_lab::vertex::Vertex;
 use static_assertions::const_assert_eq;
 
@@ -32,7 +34,6 @@ const_assert_eq!(WINDOW_HEIGHT & (WINDOW_HEIGHT - 1), 0);
 
 fn main() {
     let event_loop = EventLoop::new();
-    let mut rng = rand::thread_rng();
 
     let wb = WindowBuilder::new()
         .with_inner_size(PhysicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -52,26 +53,29 @@ fn main() {
         [-1.0, 1.0].into(),
     ];
 
-    // TODO improve
-    let mut pixels = Vec::with_capacity((WINDOW_HEIGHT / SCALE) as usize);
+    let row_count = WINDOW_HEIGHT / SCALE;
+    let col_count = WINDOW_WIDTH / SCALE;
+
     let dist = Bernoulli::new(0.3).unwrap();
-    for _ in 0..WINDOW_HEIGHT / SCALE {
-        let mut row = Vec::with_capacity((WINDOW_WIDTH / SCALE) as usize);
-        for _ in 0..WINDOW_WIDTH / SCALE {
-            if rng.sample(&dist) {
-                row.push((255.0, 255.0, 255.0, 255.0));
+    let mut pixels = Vec::with_capacity((row_count * col_count * 4) as usize);
+    let rng = rand::thread_rng();
+    let samples = (&dist)
+        .sample_iter(rng)
+        .take((row_count * col_count) as usize)
+        .flat_map(|sample| {
+            if sample {
+                [255.0, 255.0, 255.0, 255.0]
             } else {
-                row.push((0.0, 0.0, 0.0, 255.0));
+                [0.0, 0.0, 0.0, 255.0]
             }
-        }
+        });
+    pixels.extend(samples);
 
-        pixels.push(row);
-    }
+    let image = RawImage2d::from_raw_rgba(pixels, (row_count, col_count));
+    let texture1 =
+        Texture2d::with_mipmaps(&display, image, glium::texture::MipmapsOption::NoMipmap).unwrap();
 
-    let back_texture =
-        Texture2d::with_mipmaps(&display, pixels, glium::texture::MipmapsOption::NoMipmap).unwrap();
-
-    let last_texture = Texture2d::empty_with_mipmaps(
+    let texture2 = Texture2d::empty_with_mipmaps(
         &display,
         glium::texture::MipmapsOption::NoMipmap,
         WINDOW_WIDTH / SCALE,
@@ -79,7 +83,7 @@ fn main() {
     )
     .unwrap();
 
-    let textures = [back_texture, last_texture];
+    let textures = [texture1, texture2];
 
     let vertex_shader = r##"#version 140
 in vec2 position;
