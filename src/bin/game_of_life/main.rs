@@ -124,7 +124,8 @@ void main() {
                 WindowEvent::MouseInput { button: MouseButton::Left, state, .. } => {
                     match state {
                         ElementState::Pressed => pressed = true,
-                        ElementState::Released => { pressed = false;
+                        ElementState::Released => {
+                            pressed = false;
                             let mut data = Vec::new();
                             for _ in 0..1 {
                                 data.push((255.0, 255.0, 255.0, 255.0));
@@ -135,7 +136,7 @@ void main() {
                             }
                             
                             textures[a].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data2)
-                        },
+                        }
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
@@ -174,46 +175,46 @@ void main() {
 
         eprintln!("drawing...");
 
-            // Input is a
-            let draw_params = uniform! {
+        // Input is a
+        let draw_params = uniform! {
                 state: glium::uniforms::Sampler::new(&textures[a]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
                 scale: [WINDOW_WIDTH / SCALE, WINDOW_HEIGHT / SCALE],
             };
 
-            let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
-            let indices = NoIndices(PrimitiveType::TrianglesList);
+        let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
+        let indices = NoIndices(PrimitiveType::TrianglesList);
 
-            // Compute b from a
-            textures[b]
-                .as_surface()
-                .draw(
-                    &vertex_buffer,
-                    &indices,
-                    &program,
-                    &draw_params,
-                    &Default::default(),
-                )
-                .unwrap();
+        // Compute b from a
+        textures[b]
+            .as_surface()
+            .draw(
+                &vertex_buffer,
+                &indices,
+                &program,
+                &draw_params,
+                &Default::default(),
+            )
+            .unwrap();
 
-            let draw_params = uniform! {
+        let draw_params = uniform! {
                 state: glium::uniforms::Sampler::new(&textures[b]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
                 scale: [WINDOW_WIDTH, WINDOW_HEIGHT],
             };
 
-            let mut target = display.draw();
-            target.clear_color(0.0, 0.0, 0.0, 1.0);
+        let mut target = display.draw();
+        target.clear_color(0.0, 0.0, 0.0, 1.0);
 
-            target
-                .draw(
-                    &vertex_buffer,
-                    &indices,
-                    &program2,
-                    &draw_params,
-                    &Default::default(),
-                )
-                .unwrap();
-            target.finish().unwrap();
+        target
+            .draw(
+                &vertex_buffer,
+                &indices,
+                &program2,
+                &draw_params,
+                &Default::default(),
+            )
+            .unwrap();
+        target.finish().unwrap();
 
-            swap(&mut a, &mut b);
+        swap(&mut a, &mut b);
     });
 }
