@@ -20,9 +20,9 @@ use rust_fractal_lab::utils::winit::WindowBuilderHelpers;
 use rust_fractal_lab::vertex::Vertex;
 use static_assertions::const_assert_eq;
 
-const WINDOW_WIDTH: u32 = 1024;
-const WINDOW_HEIGHT: u32 = 1024;
-const SCALE: u32 = 16;
+const WINDOW_WIDTH: u32 = 512;
+const WINDOW_HEIGHT: u32 = 512;
+const SCALE: u32 = 8;
 
 // Height and width should be divisible by scale
 const_assert_eq!(WINDOW_WIDTH % SCALE, 0);
