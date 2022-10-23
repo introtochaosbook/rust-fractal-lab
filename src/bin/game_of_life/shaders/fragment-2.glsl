@@ -1,3 +1,5 @@
+// Based on https://github.com/skeeto/webgl-game-of-life/
+
 #version 140
 
 out vec4 color;
