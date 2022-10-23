@@ -162,12 +162,10 @@ fn main() {
     let rule: Box<dyn Rule> = match args.rule {
         // By default, the below rule is selected
         None => Box::new(Rule1::default()),
-        Some(rule) => {
-            match rule {
-                BuiltinRule::Rule1 => Box::new(Rule1::default()),
-                BuiltinRule::Rule2 => Box::new(Rule2::default()),
-            }
-        }
+        Some(rule) => match rule {
+            BuiltinRule::Rule1 => Box::new(Rule1::default()),
+            BuiltinRule::Rule2 => Box::new(Rule2::default()),
+        },
     };
 
     for _ in 0..args.iterations {
