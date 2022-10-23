@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter, Write};
 
 use bitvec::vec::BitVec;
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use rand::Rng;
 use regex::Regex;
 
@@ -12,19 +12,21 @@ struct State(BitVec);
 
 /// Represents a rule to be applied to the state
 trait Rule {
-    fn apply(a_neg1: bool, a_0: bool, a_1: bool) -> bool;
+    fn apply(&self, a_neg1: bool, a_0: bool, a_1: bool) -> bool;
 }
 
+#[derive(Default)]
 struct Rule1;
 impl Rule for Rule1 {
-    fn apply(a_neg1: bool, a_0: bool, a_1: bool) -> bool {
+    fn apply(&self, a_neg1: bool, a_0: bool, a_1: bool) -> bool {
         (a_neg1 && !a_0 && !a_1) || (!a_neg1 && a_1) || (a_0 && a_1)
     }
 }
 
+#[derive(Default)]
 struct Rule2;
 impl Rule for Rule2 {
-    fn apply(a_neg1: bool, a_0: bool, a_1: bool) -> bool {
+    fn apply(&self, a_neg1: bool, a_0: bool, a_1: bool) -> bool {
         (a_neg1 && !a_0 && !a_1) || (!a_neg1 && a_1)
     }
 }
@@ -106,14 +108,14 @@ impl State {
     }
 
     /// Compute next state given `R`, a rule type
-    fn next<R: Rule>(&self) -> State {
+    fn next<R: Rule + ?Sized>(&self, rule: &Box<R>) -> State {
         let mut ret = BitVec::repeat(false, self.0.len());
 
         // The `Windows` iterator is very helpful here - it saves us from having to manually deal
         // with boundary conditions.
         for (i, slice) in self.0.windows(3).enumerate() {
             // Apply the rule
-            ret.set(i + 1, R::apply(slice[0], slice[1], slice[2]));
+            ret.set(i + 1, rule.apply(slice[0], slice[1], slice[2]));
         }
 
         State(ret)
@@ -138,8 +140,17 @@ impl Display for State {
 struct Args {
     input: String,
 
-    #[clap(short, long, default_value_t = 25)]
+    #[clap(short, long, default_value_t = 20)]
     iterations: u32,
+
+    #[clap(short, long)]
+    rule: Option<BuiltinRule>,
+}
+
+#[derive(Clone, ValueEnum, strum_macros::Display)]
+pub enum BuiltinRule {
+    Rule1,
+    Rule2,
 }
 
 fn main() {
@@ -148,8 +159,19 @@ fn main() {
     let mut state = State::parse(args.input);
     println!("{}", state);
 
+    let rule: Box<dyn Rule> = match args.rule {
+        // By default, the below rule is selected
+        None => Box::new(Rule1::default()),
+        Some(rule) => {
+            match rule {
+                BuiltinRule::Rule1 => Box::new(Rule1::default()),
+                BuiltinRule::Rule2 => Box::new(Rule2::default()),
+            }
+        }
+    };
+
     for _ in 0..args.iterations {
-        state = state.next::<Rule2>();
+        state = state.next(&rule);
         println!("{}", state);
     }
 }
