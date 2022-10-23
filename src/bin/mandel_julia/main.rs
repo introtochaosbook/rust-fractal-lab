@@ -407,7 +407,7 @@ void main() {
                                 .as_surface()
                                 .fill(&target, glium::uniforms::MagnifySamplerFilter::Linear);
                         } else {
-                            // TODO: at least on Ubuntu on VMware, blitting doesn't seem to be supported
+                            // TODO: at least on Ubuntu on VMware, blitting doesn't work here.
                             // Workaround for Linux: re-execute the shader, this time targeting the surface
                             target
                                 .draw(
