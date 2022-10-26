@@ -9,7 +9,7 @@ edition = "2021"
 bitvec = "1"
 clap = { version = "4", features = ["derive"] }
 hdrhistogram = "7.5.2"
-glium = { version = "0.32.1", path = "../../repos/glium" }
+glium = { git = "https://github.com/introtochaosbook/glium.git", version = "0.32.1", branch = "cpl/read" }
 imgui = { git = "https://github.com/introtochaosbook/imgui-rs.git", branch = "cpl/glium-0.32.1" }
 imgui-glium-renderer = { git = "https://github.com/introtochaosbook/imgui-rs.git", branch = "cpl/glium-0.32.1" }
 imgui-winit-support = { git = "https://github.com/introtochaosbook/imgui-rs.git", branch = "cpl/glium-0.32.1" }
@@ -22,7 +22,7 @@ strum_macros = "0.24"
 ouroboros = "0.15"
 
 [patch.crates-io]
-glium = { path = "../../repos/glium" }
+glium = { git = "https://github.com/introtochaosbook/glium.git", version = "0.32.1", branch = "cpl/read" }
 
 [dev-dependencies]
 bencher = "0.1.5"
