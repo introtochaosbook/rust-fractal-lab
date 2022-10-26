@@ -24,10 +24,3 @@ ouroboros = "0.15"
 [patch.crates-io]
 glium = { git = "https://github.com/introtochaosbook/glium.git", version = "0.32.1", branch = "cpl/read" }
 
-[dev-dependencies]
-bencher = "0.1.5"
-
-[[bench]]
-name = "sierpinski2"
-path = "benches/sierpinski2.rs"
-harness = false
