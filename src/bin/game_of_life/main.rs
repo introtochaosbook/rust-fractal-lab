@@ -1,4 +1,3 @@
-use std::mem::swap;
 use std::ops::Add;
 use std::time::{Duration, Instant};
 
@@ -109,8 +108,7 @@ void main() {
     )
     .unwrap();
 
-    let mut a = 0;
-    let mut b = 1;
+    let mut active_texture = false;
 
     let mut cursor_position: Option<PhysicalPosition<i32>> = None;
     let mut pressed = false;
@@ -127,32 +125,18 @@ void main() {
                         ElementState::Pressed => pressed = true,
                         ElementState::Released => {
                             pressed = false;
-                            let mut data = Vec::new();
-                            for _ in 0..1 {
-                                data.push((255.0, 255.0, 255.0, 255.0));
-                            }
-                            let mut data2 = Vec::new();
-                            for _ in 0..1 {
-                                data2.push(data.clone());
-                            }
-                            
-                            textures[a].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data2)
+                            let data = vec![vec![(255.0, 255.0, 255.0, 255.0)]];
+
+                            textures[active_texture as usize].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data)
                         }
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
                     cursor_position = Some(position.cast::<i32>());
                     if pressed {
-                        let mut data = Vec::new();
-                        for _ in 0..1 {
-                            data.push((255.0, 255.0, 255.0, 255.0));
-                        }
-                        let mut data2 = Vec::new();
-                        for _ in 0..1 {
-                            data2.push(data.clone());
-                        }
+                        let data = vec![vec![(255.0, 255.0, 255.0, 255.0)]];
 
-                        textures[a].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data2)
+                        textures[active_texture as usize].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data)
                     }
 
                     return;
@@ -174,11 +158,9 @@ void main() {
 
         *control_flow = ControlFlow::WaitUntil(Instant::now().add(Duration::from_millis(10)));
 
-        eprintln!("drawing...");
-
         // Input is a
         let draw_params = uniform! {
-                state: glium::uniforms::Sampler::new(&textures[a]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
+                state: glium::uniforms::Sampler::new(&textures[active_texture as usize]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
                 scale: [WINDOW_WIDTH / SCALE, WINDOW_HEIGHT / SCALE],
             };
 
@@ -186,7 +168,7 @@ void main() {
         let indices = NoIndices(PrimitiveType::TrianglesList);
 
         // Compute b from a
-        textures[b]
+        textures[!active_texture as usize]
             .as_surface()
             .draw(
                 &vertex_buffer,
@@ -198,7 +180,7 @@ void main() {
             .unwrap();
 
         let draw_params = uniform! {
-                state: glium::uniforms::Sampler::new(&textures[b]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
+                state: glium::uniforms::Sampler::new(&textures[!active_texture as usize]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
                 scale: [WINDOW_WIDTH, WINDOW_HEIGHT],
             };
 
@@ -216,6 +198,6 @@ void main() {
             .unwrap();
         target.finish().unwrap();
 
-        swap(&mut a, &mut b);
+        active_texture = !active_texture;
     });
 }
