@@ -28,7 +28,8 @@ const SCALE: u32 = 8;
 const_assert_eq!(WINDOW_WIDTH % SCALE, 0);
 const_assert_eq!(WINDOW_HEIGHT % SCALE, 0);
 
-// Height and width must be powers of 2 for wraparound to work
+// Height and width must be powers of 2 for wraparound to work.
+// If you don't care, you can comment out these lines.
 const_assert_eq!(WINDOW_WIDTH & (WINDOW_WIDTH - 1), 0);
 const_assert_eq!(WINDOW_HEIGHT & (WINDOW_HEIGHT - 1), 0);
 
