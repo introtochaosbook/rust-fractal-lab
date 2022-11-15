@@ -92,7 +92,7 @@ void main() {
 }
 "##;
 
-    let program = Program::from_source(
+    let game_program = Program::from_source(
         &display,
         vertex_shader,
         &build_shader(include_str!("shaders/fragment-game.glsl")),
@@ -100,7 +100,7 @@ void main() {
     )
     .unwrap();
 
-    let program2 = Program::from_source(
+    let display_program = Program::from_source(
         &display,
         vertex_shader,
         &build_shader(include_str!("shaders/fragment-display.glsl")),
@@ -173,7 +173,7 @@ void main() {
             .draw(
                 &vertex_buffer,
                 &indices,
-                &program,
+                &game_program,
                 &draw_params,
                 &Default::default(),
             )
@@ -191,7 +191,7 @@ void main() {
             .draw(
                 &vertex_buffer,
                 &indices,
-                &program2,
+                &display_program,
                 &draw_params,
                 &Default::default(),
             )
