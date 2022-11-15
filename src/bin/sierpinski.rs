@@ -15,7 +15,7 @@ fn main() {
 
     let wb = WindowBuilder::new()
         .with_inner_size(LogicalSize::new(768.0, 768.0))
-        .with_title("Hello world");
+        .with_title("Sierpinski's triangle");
 
     let cb = ContextBuilder::new();
 

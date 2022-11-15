@@ -38,7 +38,7 @@ fn main() {
 
     let wb = WindowBuilder::new()
         .with_inner_size_centered(PhysicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT), &event_loop)
-        .with_title("Hello world")
+        .with_title("Game of life")
         .with_resizable(false);
 
     let cb = ContextBuilder::new();

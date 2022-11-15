@@ -178,7 +178,7 @@ impl IfsProgram {
 
         let wb = WindowBuilder::new()
             .with_inner_size(LogicalSize::new(768.0_f32, 768.0_f32))
-            .with_title("Hello world");
+            .with_title("IFS viewer");
 
         let cb = ContextBuilder::new();
 

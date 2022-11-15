@@ -216,7 +216,7 @@ fn main() {
     let wb = WindowBuilder::new()
         .with_inner_size(PhysicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT))
         .with_resizable(false)
-        .with_title("Hello world")
+        .with_title("Mandelbrot / Julia set viewer")
         .with_position(PhysicalPosition::new(0, 0));
 
     let cb = ContextBuilder::new();
