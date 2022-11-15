@@ -95,7 +95,7 @@ void main() {
     let program = Program::from_source(
         &display,
         vertex_shader,
-        &build_shader(include_str!("shaders/fragment.glsl")),
+        &build_shader(include_str!("shaders/fragment-game.glsl")),
         None,
     )
     .unwrap();
@@ -103,7 +103,7 @@ void main() {
     let program2 = Program::from_source(
         &display,
         vertex_shader,
-        &build_shader(include_str!("shaders/fragment-2.glsl")),
+        &build_shader(include_str!("shaders/fragment-display.glsl")),
         None,
     )
     .unwrap();
