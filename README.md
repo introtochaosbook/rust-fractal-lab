@@ -58,7 +58,7 @@ cargo run --bin=redmoscl
 ```
 ![Redwood forest IFS](images/redmoscl.png)
 
-## Prerequisites
+## How to run
 
 ### Linux
 
