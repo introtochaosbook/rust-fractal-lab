@@ -1,5 +1,9 @@
-// Scaling code based on https://github.com/remexre/mandelbrot-rust-gl
+// This program is a combined Mandelbrot and Julia set viewer. It implements histogram coloring,
+// runtime selection of Julia set function & color scheme, and a few other features.
+//
+// If you are looking for something simpler, check out the mandelbrot_simple and julia_simple bins.
 
+// Scaling code based on https://github.com/remexre/mandelbrot-rust-gl
 
 use std::time::Instant;
 
@@ -26,7 +30,7 @@ use ouroboros::self_referencing;
 use rust_fractal_lab::args::{ColorScheme, JuliaFunction};
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
-use strum::{IntoEnumIterator, VariantNames};
+use strum::VariantNames;
 
 #[derive(Parser)]
 #[command(group(
@@ -206,6 +210,8 @@ fn main() {
     let cb = ContextBuilder::new();
     let main_display = Display::new(wb, cb, &event_loop).unwrap();
 
+    // This had to be a separate window (unlike in the bifurcation bin), otherwise blitting
+    // didn't work for me.
     let wb = WindowBuilder::new()
         .with_title("Parameters")
         .with_resizable(false)
@@ -295,7 +301,7 @@ void main() {
     eprintln!("{:?}", dim);
     let mut draw_params = DrawParams::new(main_display.get_framebuffer_dimensions(), &args);
 
-    // Input variables.
+    // Input variables
     let mut mouse_down = false;
     let mut mouse_last = (0f64, 0f64);
 
@@ -354,6 +360,7 @@ void main() {
                         let p: Vec<Vec<(u32, u32)>> =
                             unsafe { dt.iteration_texture.unchecked_read() };
 
+                        // Populate histogram
                         hist.reset();
                         for p in p.into_iter().flatten().filter(|b| b.1 != 1) {
                             hist.record(p.0 as u64).unwrap();
