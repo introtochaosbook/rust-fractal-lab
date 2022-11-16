@@ -56,7 +56,9 @@ fn main() {
     let row_count = WINDOW_HEIGHT / SCALE;
     let col_count = WINDOW_WIDTH / SCALE;
 
+    // Populate texture1 with random pixels
     let dist = Bernoulli::new(0.3).unwrap();
+    // Preallocate vec - it is *4 because each pixel is RGBA
     let mut pixels = Vec::with_capacity((row_count * col_count * 4) as usize);
     let rng = rand::thread_rng();
     let samples = (&dist)
@@ -75,6 +77,7 @@ fn main() {
     let texture1 =
         Texture2d::with_mipmaps(&display, image, glium::texture::MipmapsOption::NoMipmap).unwrap();
 
+    // texture2 starts out empty
     let texture2 = Texture2d::empty_with_mipmaps(
         &display,
         glium::texture::MipmapsOption::NoMipmap,
@@ -92,6 +95,7 @@ void main() {
 }
 "##;
 
+    // The program which calculates the next frame of game of life
     let game_program = Program::from_source(
         &display,
         vertex_shader,
@@ -100,6 +104,7 @@ void main() {
     )
     .unwrap();
 
+    // The program which simply draws the current state to the screen
     let display_program = Program::from_source(
         &display,
         vertex_shader,
@@ -108,6 +113,7 @@ void main() {
     )
     .unwrap();
 
+    // We will toggle this back and forth on each frame
     let mut active_texture = false;
 
     let mut cursor_position: Option<PhysicalPosition<i32>> = None;
@@ -175,13 +181,13 @@ void main() {
         let indices = NoIndices(PrimitiveType::TrianglesList);
 
         if is_running {
-            // Input is a
+            // Use the active texture as input
             let draw_params = uniform! {
                 state: glium::uniforms::Sampler::new(&textures[active_texture as usize]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
                 scale: [WINDOW_WIDTH / SCALE, WINDOW_HEIGHT / SCALE],
             };
 
-            // Compute b from a
+            // Compute next frame of game of life, store it in the inactive texture
             textures[!active_texture as usize]
                 .as_surface()
                 .draw(
@@ -195,6 +201,7 @@ void main() {
 
         }
 
+        // Draw the inactive texture to the screen
         let draw_params = uniform! {
             state: glium::uniforms::Sampler::new(&textures[!active_texture as usize]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
             scale: [WINDOW_WIDTH, WINDOW_HEIGHT],
@@ -215,6 +222,7 @@ void main() {
         target.finish().unwrap();
 
         if is_running {
+            // Toggle which texture is active
             active_texture = !active_texture;
         }
     });
