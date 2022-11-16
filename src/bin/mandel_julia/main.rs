@@ -56,7 +56,7 @@ struct Data {
     buffs: (glium::framebuffer::MultiOutputFrameBuffer<'this>, &'this Dt),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct DrawParams {
     x_min: f64,
     x_max: f64,
@@ -75,29 +75,7 @@ struct DrawParams {
 
 impl DrawParams {
     fn new(dims: (u32, u32), args: &MandelJuliaArgs) -> DrawParams {
-        DrawParams {
-            x_min: -2.0,
-            x_max: {
-                if args.is_mandelbrot {
-                    1.0
-                } else {
-                    2.0
-                }
-            },
-            y_min: {
-                if args.is_mandelbrot {
-                    -1.0
-                } else {
-                    -2.0
-                }
-            },
-            y_max: {
-                if args.is_mandelbrot {
-                    1.0
-                } else {
-                    2.0
-                }
-            },
+        let mut ret = DrawParams {
             width: dims.0 as f32,
             height: dims.1 as f32,
             max_iterations: match args.julia_function {
@@ -109,7 +87,11 @@ impl DrawParams {
             f: args.julia_function.unwrap_or_default().subroutine_name(),
             color_map: args.color_scheme.subroutine_name(),
             is_mandelbrot: args.is_mandelbrot,
-        }
+            ..DrawParams::default()
+        };
+
+        ret.reset(args);
+        ret
     }
 
     fn reset(&mut self, args: &MandelJuliaArgs) {
