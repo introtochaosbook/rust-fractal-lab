@@ -101,7 +101,7 @@ void main() {
         let mut params = DrawParameters::default();
         params.line_width = Some(4.0);
         target
-            .draw(&vertex_buffer, &indices, &program, &uniforms, &params)
+            .draw(&vertex_buffer, indices, &program, &uniforms, &params)
             .unwrap();
         target.finish().unwrap();
     });

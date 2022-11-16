@@ -100,7 +100,7 @@ void main() {
         target
             .draw(
                 &vertex_buffer,
-                &indices,
+                indices,
                 &program,
                 &uniforms,
                 &Default::default(),

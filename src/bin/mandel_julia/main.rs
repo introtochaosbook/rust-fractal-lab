@@ -1,6 +1,6 @@
 // Scaling code based on https://github.com/remexre/mandelbrot-rust-gl
 
-use std::ops::Index;
+
 use std::time::Instant;
 
 use clap::ArgGroup;
@@ -340,7 +340,7 @@ void main() {
                         framebuffer
                             .draw(
                                 &vertex_buffer,
-                                &indices,
+                                indices,
                                 &program,
                                 &draw_params,
                                 &Default::default(),
@@ -388,7 +388,7 @@ void main() {
                             framebuffer
                                 .draw(
                                     &vertex_buffer,
-                                    &indices,
+                                    indices,
                                     &program,
                                     &draw_params,
                                     &Default::default(),
@@ -405,7 +405,7 @@ void main() {
                             target
                                 .draw(
                                     &vertex_buffer,
-                                    &indices,
+                                    indices,
                                     &program,
                                     &draw_params,
                                     &Default::default(),

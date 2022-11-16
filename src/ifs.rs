@@ -258,7 +258,7 @@ void main() {
             let mut p = DrawParameters::default();
             p.point_size = point_size;
             target
-                .draw(&vertex_buffer, &indices, &program, &uniforms, &p)
+                .draw(&vertex_buffer, indices, &program, &uniforms, &p)
                 .unwrap();
             target.finish().unwrap();
         });

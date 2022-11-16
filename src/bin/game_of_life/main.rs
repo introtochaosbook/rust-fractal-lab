@@ -172,7 +172,7 @@ void main() {
             .as_surface()
             .draw(
                 &vertex_buffer,
-                &indices,
+                indices,
                 &game_program,
                 &draw_params,
                 &Default::default(),
@@ -190,7 +190,7 @@ void main() {
         target
             .draw(
                 &vertex_buffer,
-                &indices,
+                indices,
                 &display_program,
                 &draw_params,
                 &Default::default(),

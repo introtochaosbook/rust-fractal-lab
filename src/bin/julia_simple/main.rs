@@ -143,7 +143,7 @@ void main() {
         target
             .draw(
                 &vertex_buffer,
-                &indices,
+                indices,
                 &program,
                 &draw_params,
                 &Default::default(),
