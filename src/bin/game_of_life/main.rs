@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 
 use glium::glutin::dpi::{PhysicalPosition, PhysicalSize};
 use glium::glutin::event::{
-    DeviceEvent, ElementState, Event, MouseButton, StartCause, WindowEvent,
+    DeviceEvent, ElementState, Event, MouseButton, StartCause, VirtualKeyCode, WindowEvent,
 };
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
@@ -112,6 +112,7 @@ void main() {
 
     let mut cursor_position: Option<PhysicalPosition<i32>> = None;
     let mut pressed = false;
+    let mut is_running = true;
 
     event_loop.run(move |ev, _, control_flow| {
         match ev {
@@ -120,6 +121,18 @@ void main() {
                     *control_flow = ControlFlow::Exit;
                     return;
                 }
+                WindowEvent::KeyboardInput { input, .. }
+                if input.state == ElementState::Pressed =>
+                    {
+                        if let Some(keycode) = input.virtual_keycode {
+                            match keycode {
+                                VirtualKeyCode::Return => {
+                                    is_running = !is_running;
+                                }
+                                _ => return,
+                            }
+                        }
+                    }
                 WindowEvent::MouseInput { button: MouseButton::Left, state, .. } => {
                     match state {
                         ElementState::Pressed => pressed = true,
@@ -158,31 +171,34 @@ void main() {
 
         *control_flow = ControlFlow::WaitUntil(Instant::now().add(Duration::from_millis(10)));
 
-        // Input is a
-        let draw_params = uniform! {
+        let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
+        let indices = NoIndices(PrimitiveType::TrianglesList);
+
+        if is_running {
+            // Input is a
+            let draw_params = uniform! {
                 state: glium::uniforms::Sampler::new(&textures[active_texture as usize]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
                 scale: [WINDOW_WIDTH / SCALE, WINDOW_HEIGHT / SCALE],
             };
 
-        let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
-        let indices = NoIndices(PrimitiveType::TrianglesList);
+            // Compute b from a
+            textures[!active_texture as usize]
+                .as_surface()
+                .draw(
+                    &vertex_buffer,
+                    indices,
+                    &game_program,
+                    &draw_params,
+                    &Default::default(),
+                )
+                .unwrap();
 
-        // Compute b from a
-        textures[!active_texture as usize]
-            .as_surface()
-            .draw(
-                &vertex_buffer,
-                indices,
-                &game_program,
-                &draw_params,
-                &Default::default(),
-            )
-            .unwrap();
+        }
 
         let draw_params = uniform! {
-                state: glium::uniforms::Sampler::new(&textures[!active_texture as usize]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
-                scale: [WINDOW_WIDTH, WINDOW_HEIGHT],
-            };
+            state: glium::uniforms::Sampler::new(&textures[!active_texture as usize]).magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest),
+            scale: [WINDOW_WIDTH, WINDOW_HEIGHT],
+        };
 
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
@@ -198,6 +214,8 @@ void main() {
             .unwrap();
         target.finish().unwrap();
 
-        active_texture = !active_texture;
+        if is_running {
+            active_texture = !active_texture;
+        }
     });
 }
