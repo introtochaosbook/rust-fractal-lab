@@ -435,6 +435,7 @@ void main() {
                             let mut changed = false;
 
                             // TODO: Only recalculate when the histogram actually changes
+                            // TODO: allocate vec once, then reuse
                             let mut p = Vec::with_capacity(hist.max() as usize + 1);
                             for i in 0..=hist.max() {
                                 p.push(hist.count_at(i) as f32);
