@@ -1,5 +1,6 @@
 // Scaling code based on https://github.com/remexre/mandelbrot-rust-gl
 
+use std::ops::Index;
 use std::time::Instant;
 
 use clap::ArgGroup;
@@ -25,19 +26,20 @@ use ouroboros::self_referencing;
 use rust_fractal_lab::args::{ColorScheme, JuliaFunction};
 use rust_fractal_lab::shader_builder::build_shader;
 use rust_fractal_lab::vertex::Vertex;
+use strum::{IntoEnumIterator, VariantNames};
 
 #[derive(Parser)]
 #[command(group(
 ArgGroup::new("mode")
-.required(true)
-.args(["is_mandelbrot", "julia_function"]),
+.args(["is_mandelbrot"])
+.conflicts_with("julia_function"),
 ))]
 pub struct MandelJuliaArgs {
     #[arg(short = 'm', long = "mandelbrot", default_value_t = false)]
     is_mandelbrot: bool,
 
-    #[arg(value_enum)]
-    julia_function: Option<JuliaFunction>,
+    #[arg(value_enum, default_value_t = JuliaFunction::default())]
+    julia_function: JuliaFunction,
 
     #[arg(value_enum, default_value_t = ColorScheme::Turbo, short, long)]
     color_scheme: ColorScheme,
@@ -79,39 +81,39 @@ impl DrawParams {
             width: dims.0 as f32,
             height: dims.1 as f32,
             max_iterations: match args.julia_function {
-                Some(JuliaFunction::Snowflakes) => 27,
+                JuliaFunction::Snowflakes => 27,
                 _ => 1024,
             },
             ranges: [0; 4],
             ranges_2: [0; 4],
-            f: args.julia_function.unwrap_or_default().subroutine_name(),
+            f: args.julia_function.subroutine_name(),
             color_map: args.color_scheme.subroutine_name(),
             is_mandelbrot: args.is_mandelbrot,
             ..DrawParams::default()
         };
 
-        ret.reset(args);
+        ret.reset(args.is_mandelbrot);
         ret
     }
 
-    fn reset(&mut self, args: &MandelJuliaArgs) {
+    fn reset(&mut self, is_mandelbrot: bool) {
         self.x_min = -2.0;
         self.x_max = {
-            if args.is_mandelbrot {
+            if is_mandelbrot {
                 1.0
             } else {
                 2.0
             }
         };
         self.y_min = {
-            if args.is_mandelbrot {
+            if is_mandelbrot {
                 -1.0
             } else {
                 -2.0
             }
         };
         self.y_max = {
-            if args.is_mandelbrot {
+            if is_mandelbrot {
                 1.0
             } else {
                 2.0
@@ -304,6 +306,15 @@ void main() {
     // Create histogram using 3 significant figures (crate's recommended default)
     let mut hist = Histogram::<u32>::new(3).unwrap();
 
+    let mut selected_julia_func = JuliaFunction::VARIANTS
+        .iter()
+        .position(|i| i == &args.julia_function.to_string())
+        .unwrap_or_default();
+    let mut selected_color_map = ColorScheme::VARIANTS
+        .iter()
+        .position(|i| i == &args.color_scheme.to_string())
+        .unwrap_or_default();
+
     event_loop.run(move |ev, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
@@ -426,6 +437,51 @@ void main() {
                             ui.plot_histogram("Escape iteration counts", p.as_slice())
                                 .graph_size([300.0, 100.0])
                                 .build();
+
+                            changed |= {
+                                let mandelbrot_changed =
+                                    ui.checkbox("Mandelbrot mode", &mut draw_params.is_mandelbrot);
+                                if mandelbrot_changed {
+                                    draw_params.reset(draw_params.is_mandelbrot);
+                                }
+                                mandelbrot_changed
+                            };
+
+                            ui.disabled(draw_params.is_mandelbrot, || {
+                                let func_changed = ui.combo_simple_string(
+                                    "Julia function",
+                                    &mut selected_julia_func,
+                                    JuliaFunction::VARIANTS,
+                                );
+                                if func_changed {
+                                    draw_params.f = format!(
+                                        "F{}",
+                                        JuliaFunction::VARIANTS[selected_julia_func]
+                                    );
+                                    if draw_params.f == "FSnowflakes" {
+                                        draw_params.max_iterations = 27;
+                                    } else {
+                                        draw_params.max_iterations = 1024;
+                                    }
+                                }
+                                changed |= func_changed;
+                            });
+
+                            changed |= {
+                                let map_changed = ui.combo_simple_string(
+                                    "Color map",
+                                    &mut selected_color_map,
+                                    ColorScheme::VARIANTS,
+                                );
+                                if map_changed {
+                                    draw_params.color_map = format!(
+                                        "ColorMap{}",
+                                        ColorScheme::VARIANTS[selected_color_map]
+                                    );
+                                }
+                                map_changed
+                            };
+
                             changed |= ui.input_scalar("x_max", &mut draw_params.x_max).build();
                             changed |=
                                 ui.slider("iterations", 1, 1024, &mut draw_params.max_iterations);
@@ -497,7 +553,7 @@ void main() {
                         match keycode {
                             VirtualKeyCode::Minus => draw_params.zoom_out(),
                             VirtualKeyCode::Equals => draw_params.zoom_in(),
-                            VirtualKeyCode::Space => draw_params.reset(&args),
+                            VirtualKeyCode::Space => draw_params.reset(draw_params.is_mandelbrot),
                             VirtualKeyCode::Up => draw_params.scroll(0.0, -1.0),
                             VirtualKeyCode::Left => draw_params.scroll(-1.0, 0.0),
                             VirtualKeyCode::Right => draw_params.scroll(1.0, 0.0),

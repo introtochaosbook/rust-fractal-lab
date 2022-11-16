@@ -1,6 +1,7 @@
 use clap::ValueEnum;
+use strum_macros::EnumVariantNames;
 
-#[derive(Clone, Copy, ValueEnum, strum_macros::Display)]
+#[derive(Clone, Copy, ValueEnum, EnumVariantNames, strum_macros::Display)]
 pub enum JuliaFunction {
     Cos,
     Sin,
@@ -28,7 +29,7 @@ impl JuliaFunction {
     }
 }
 
-#[derive(Clone, ValueEnum, strum_macros::Display)]
+#[derive(Clone, ValueEnum, EnumVariantNames, strum_macros::Display)]
 pub enum ColorScheme {
     Inferno,
     Viridis,
