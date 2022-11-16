@@ -2,6 +2,15 @@
 
 This is the companion source code for ... TODO
 
+## Screenshots
+
+### Game of life
+![Game of life](images/gol.gif)
+
+### Mandelbrot / Julia set viewer
+![Mandelbrot / Julia set viewer](images/julia-dragon.gif)
+
+
 ## Prerequisites
 
 ### Linux
