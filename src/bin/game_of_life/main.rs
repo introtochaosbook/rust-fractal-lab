@@ -135,7 +135,7 @@ void main() {
                     {
                         if let Some(keycode) = input.virtual_keycode {
                             match keycode {
-                                VirtualKeyCode::Return => {
+                                VirtualKeyCode::Space => {
                                     is_running = !is_running;
                                 }
                                 _ => return,
