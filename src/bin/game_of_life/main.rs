@@ -117,8 +117,11 @@ void main() {
     let mut active_texture = false;
 
     let mut cursor_position: Option<PhysicalPosition<i32>> = None;
-    let mut pressed = false;
+    let mut pressed_button = None;
     let mut is_running = true;
+
+    let single_set_pixel: Vec<Vec<(f32, f32, f32, f32)>> = vec![vec![(255.0, 255.0, 255.0, 255.0)]];
+    let single_empty_pixel: Vec<Vec<(f32, f32, f32, f32)>> = vec![vec![(0.0, 0.0, 0.0, 255.0)]];
 
     event_loop.run(move |ev, _, control_flow| {
         match ev {
@@ -139,26 +142,47 @@ void main() {
                             }
                         }
                     }
-                WindowEvent::MouseInput { button: MouseButton::Left, state, .. } => {
+                WindowEvent::MouseInput { button: button @ (MouseButton::Right | MouseButton::Left), state, .. } => {
                     match state {
-                        ElementState::Pressed => pressed = true,
+                        ElementState::Pressed => pressed_button = Some(button),
                         ElementState::Released => {
-                            pressed = false;
-                            let data = vec![vec![(255.0, 255.0, 255.0, 255.0)]];
+                            pressed_button = None;
 
-                            textures[active_texture as usize].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data)
+                            let rect = rect_for_cursor(cursor_position.unwrap());
+
+                            let pixel = match button {
+                                MouseButton::Left => &single_set_pixel,
+                                MouseButton::Right => &single_empty_pixel,
+                                _ => unreachable!(),
+                            };
+
+                            textures[active_texture as usize].write(rect, pixel.clone());
+                            // If paused, also write to inactive texture so it is immediately drawn
+                            if !is_running {
+                                textures[!active_texture as usize].write(rect, pixel.clone());
+                            }
                         }
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
                     cursor_position = Some(position.cast::<i32>());
-                    if pressed {
-                        let data = vec![vec![(255.0, 255.0, 255.0, 255.0)]];
+                    if let Some(button) = pressed_button {
+                        let rect = rect_for_cursor(cursor_position.unwrap());
 
-                        textures[active_texture as usize].write(Rect { left: (cursor_position.as_ref().unwrap().x as u32) / SCALE, bottom: (WINDOW_HEIGHT - cursor_position.as_ref().unwrap().y as u32) / SCALE, width: 1, height: 1 }, data)
+                        let pixel = match button {
+                            MouseButton::Left => &single_set_pixel,
+                            MouseButton::Right => &single_empty_pixel,
+                            _ => unreachable!(),
+                        };
+
+                        textures[active_texture as usize].write(rect, pixel.clone());
+                        // If paused, also write to inactive texture so it is immediately drawn
+                        if !is_running {
+                            textures[!active_texture as usize].write(rect, pixel.clone());
+                        }
+                    } else {
+                        return;
                     }
-
-                    return;
                 }
                 _ => return,
             },
@@ -226,4 +250,13 @@ void main() {
             active_texture = !active_texture;
         }
     });
+}
+
+fn rect_for_cursor(cursor_position: PhysicalPosition<i32>) -> Rect {
+    Rect {
+        left: (cursor_position.x as u32) / SCALE,
+        bottom: (WINDOW_HEIGHT.saturating_sub(cursor_position.y as u32)) / SCALE,
+        width: 1,
+        height: 1,
+    }
 }
