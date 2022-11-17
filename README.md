@@ -67,7 +67,7 @@ Instructions based on Ubuntu 22.04.1.
 1. Install Rust: https://rustup.rs/
 2. Install required tools and libraries:
 ```shell
-sudo apt install -y build-essential cmake libfontconfig-dev pkg-config
+sudo apt install -y build-essential cmake git libfontconfig-dev pkg-config
 ```
 
 3. Clone source code and run!
@@ -82,6 +82,25 @@ cargo run --bin=game_of_life
 * Ensure your VM has 3D graphics acceleration enabled
 * Use the [glxinfo utility](https://manpages.ubuntu.com/manpages/bionic/man1/glxinfo.1.html) to check 
 * Upgrade to a newer kernel
+
+### macOS
+
+Instructions based on macOS Big Sur. I am using Homebrew (https://brew.sh/) as package manager.
+
+1. Install git:
+```shell
+brew install git
+```
+
+2. Install rust: https://rustup.rs/
+   - The installer will ask if you want to customize installation options. This is not necessary - just choose option #1.
+3. Clone source code and run!
+
+```shell
+git clone https://github.com/introtochaosbook/rust-fractal-lab.git
+cd rust-fractal-lab
+cargo run --bin=game_of_life
+```
 
 ### Windows
 
@@ -108,6 +127,3 @@ thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: GlutinCr
 ```
 
 Unfortunately, I was unable to find a fix or workaround.
-
-
-### macOS
