@@ -145,11 +145,11 @@ void main() {
             _ => unreachable!(),
         };
 
-        textures[active_texture as usize].write(rect, pixel.clone());
         // If paused, also write to inactive texture so it is immediately drawn
         if !is_running {
-            textures[!active_texture as usize].write(rect, pixel);
+            textures[!active_texture as usize].write(rect, pixel.clone());
         }
+        textures[active_texture as usize].write(rect, pixel);
     }
 
     event_loop.run(move |ev, _, control_flow| {
