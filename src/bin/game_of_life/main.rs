@@ -127,7 +127,17 @@ void main() {
         active_texture: bool,
         is_running: bool,
     ) {
-        let rect = rect_for_cursor(cursor_position.unwrap());
+        let cursor_position = cursor_position.unwrap();
+        let rect = Rect {
+            left: (cursor_position.x as u32) / SCALE,
+            bottom: (WINDOW_HEIGHT.saturating_sub(cursor_position.y as u32)) / SCALE,
+            width: 1,
+            height: 1,
+        };
+
+        if rect.left >= WINDOW_WIDTH / SCALE || rect.bottom >= WINDOW_HEIGHT / SCALE {
+            return;
+        }
 
         let pixel = match button {
             MouseButton::Left => vec![vec![(255.0, 255.0, 255.0, 255.0)]],
@@ -257,13 +267,4 @@ void main() {
             active_texture = !active_texture;
         }
     });
-}
-
-fn rect_for_cursor(cursor_position: PhysicalPosition<i32>) -> Rect {
-    Rect {
-        left: (cursor_position.x as u32) / SCALE,
-        bottom: (WINDOW_HEIGHT.saturating_sub(cursor_position.y as u32)) / SCALE,
-        width: 1,
-        height: 1,
-    }
 }
