@@ -120,8 +120,27 @@ void main() {
     let mut pressed_button = None;
     let mut is_running = true;
 
-    let single_set_pixel: Vec<Vec<(f32, f32, f32, f32)>> = vec![vec![(255.0, 255.0, 255.0, 255.0)]];
-    let single_empty_pixel: Vec<Vec<(f32, f32, f32, f32)>> = vec![vec![(0.0, 0.0, 0.0, 255.0)]];
+    fn handle_manual_draw(
+        cursor_position: Option<PhysicalPosition<i32>>,
+        button: MouseButton,
+        textures: &[Texture2d; 2],
+        active_texture: bool,
+        is_running: bool,
+    ) {
+        let rect = rect_for_cursor(cursor_position.unwrap());
+
+        let pixel = match button {
+            MouseButton::Left => vec![vec![(255.0, 255.0, 255.0, 255.0)]],
+            MouseButton::Right => vec![vec![(0.0, 0.0, 0.0, 255.0)]],
+            _ => unreachable!(),
+        };
+
+        textures[active_texture as usize].write(rect, pixel.clone());
+        // If paused, also write to inactive texture so it is immediately drawn
+        if !is_running {
+            textures[!active_texture as usize].write(rect, pixel);
+        }
+    }
 
     event_loop.run(move |ev, _, control_flow| {
         match ev {
@@ -148,38 +167,26 @@ void main() {
                         ElementState::Released => {
                             pressed_button = None;
 
-                            let rect = rect_for_cursor(cursor_position.unwrap());
-
-                            let pixel = match button {
-                                MouseButton::Left => &single_set_pixel,
-                                MouseButton::Right => &single_empty_pixel,
-                                _ => unreachable!(),
-                            };
-
-                            textures[active_texture as usize].write(rect, pixel.clone());
-                            // If paused, also write to inactive texture so it is immediately drawn
-                            if !is_running {
-                                textures[!active_texture as usize].write(rect, pixel.clone());
-                            }
+                            handle_manual_draw(
+                                cursor_position,
+                                button,
+                                &textures,
+                                active_texture,
+                                is_running
+                            );
                         }
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
                     cursor_position = Some(position.cast::<i32>());
                     if let Some(button) = pressed_button {
-                        let rect = rect_for_cursor(cursor_position.unwrap());
-
-                        let pixel = match button {
-                            MouseButton::Left => &single_set_pixel,
-                            MouseButton::Right => &single_empty_pixel,
-                            _ => unreachable!(),
-                        };
-
-                        textures[active_texture as usize].write(rect, pixel.clone());
-                        // If paused, also write to inactive texture so it is immediately drawn
-                        if !is_running {
-                            textures[!active_texture as usize].write(rect, pixel.clone());
-                        }
+                        handle_manual_draw(
+                            cursor_position,
+                            button,
+                            &textures,
+                            active_texture,
+                            is_running
+                        );
                     } else {
                         return;
                     }
