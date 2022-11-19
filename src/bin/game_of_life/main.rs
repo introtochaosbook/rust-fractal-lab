@@ -1,5 +1,6 @@
 use std::ops::Add;
 use std::time::{Duration, Instant};
+use game_of_life_parsers::{Coord, Life105Parser, Parser};
 
 use glium::glutin::dpi::{PhysicalPosition, PhysicalSize};
 use glium::glutin::event::{
@@ -19,8 +20,8 @@ use rust_fractal_lab::utils::winit::WindowBuilderHelpers;
 use rust_fractal_lab::vertex::Vertex;
 use static_assertions::const_assert_eq;
 
-const WINDOW_WIDTH: u32 = 512;
-const WINDOW_HEIGHT: u32 = 512;
+const WINDOW_WIDTH: u32 = 896;
+const WINDOW_HEIGHT: u32 = 896;
 const SCALE: u32 = 8;
 
 // Height and width should be divisible by scale
@@ -29,8 +30,8 @@ const_assert_eq!(WINDOW_HEIGHT % SCALE, 0);
 
 // Height and width must be powers of 2 for wraparound to work.
 // If you don't care, you can comment out these lines.
-const_assert_eq!(WINDOW_WIDTH & (WINDOW_WIDTH - 1), 0);
-const_assert_eq!(WINDOW_HEIGHT & (WINDOW_HEIGHT - 1), 0);
+// const_assert_eq!(WINDOW_WIDTH & (WINDOW_WIDTH - 1), 0);
+// const_assert_eq!(WINDOW_HEIGHT & (WINDOW_HEIGHT - 1), 0);
 
 fn main() {
     let event_loop = EventLoop::new();
@@ -53,6 +54,38 @@ fn main() {
         [-1.0, 1.0].into(),
     ];
 
+    let lexicon = lexicon::Lexicon::get();
+    assert_eq!(lexicon.terms.len() > 0, true);
+
+    let glider = lexicon.get_term("wickstretcher".to_string()).unwrap();
+    let mut pixels = Vec::with_capacity((glider.height * glider.width * 4) as usize);
+
+    for i in 0..glider.height {
+        for j in 0..glider.width {
+            if glider.cells.contains(&lexicon::Cell { x: j as i32, y: i as i32 }) {
+                pixels.push(255.0);
+                pixels.push(255.0);
+                pixels.push(255.0);
+            } else {
+                pixels.push(0.0);
+                pixels.push(0.0);
+                pixels.push(0.0);
+            }
+
+            pixels.push(255.0);
+        }
+    }
+
+    let glider_image = RawImage2d::from_raw_rgba(pixels.clone(), (glider.width as u32, glider.height as u32));
+    let glider_image2 = RawImage2d::from_raw_rgba(pixels, (glider.width as u32, glider.height as u32));
+
+    let glider_rect = Rect {
+        left: 60,
+        bottom: 30,
+        height: glider.height as u32,
+        width: glider.width as u32,
+    };
+
     let row_count = WINDOW_HEIGHT / SCALE;
     let col_count = WINDOW_WIDTH / SCALE;
 
@@ -65,15 +98,15 @@ fn main() {
         .sample_iter(rng)
         .take((row_count * col_count) as usize)
         .flat_map(|sample| {
-            if sample {
-                [255.0, 255.0, 255.0, 255.0]
-            } else {
+            // if sample {
+            //     [255.0, 255.0, 255.0, 255.0]
+            // } else {
                 [0.0, 0.0, 0.0, 255.0]
-            }
+            //}
         });
     pixels.extend(samples);
 
-    let image = RawImage2d::from_raw_rgba(pixels, (row_count, col_count));
+    let image = RawImage2d::from_raw_rgba(pixels.clone(), (row_count, col_count));
     let texture1 =
         Texture2d::with_mipmaps(&display, image, glium::texture::MipmapsOption::NoMipmap).unwrap();
 
@@ -85,6 +118,9 @@ fn main() {
         WINDOW_HEIGHT / SCALE,
     )
     .unwrap();
+
+    texture1.write(glider_rect, glider_image);
+    texture2.write(glider_rect, glider_image2);
 
     let textures = [texture1, texture2];
 
@@ -118,7 +154,7 @@ void main() {
 
     let mut cursor_position: Option<PhysicalPosition<i32>> = None;
     let mut pressed_button = None;
-    let mut is_running = true;
+    let mut is_running = false;
 
     fn handle_manual_draw(
         cursor_position: Option<PhysicalPosition<i32>>,
