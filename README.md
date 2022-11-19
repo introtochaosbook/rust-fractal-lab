@@ -1,6 +1,8 @@
 # rust-fractal-lab
 
-This is the companion source code for ... TODO
+This is the companion source code for the book *Introduction to Chaos, Fractals and Dynamical Systems*. 
+
+For usage instructions please scroll down to the bottom of the page.
 
 ## Screenshots
 
