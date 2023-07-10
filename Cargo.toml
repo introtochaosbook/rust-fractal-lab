@@ -19,9 +19,9 @@ once_cell = "1"
 rand = "0.8"
 regex = "1"
 static_assertions = "1"
-strum = { version = "0.24", features = ["derive"] }
-strum_macros = "0.24"
-ouroboros = "0.15"
+strum = { version = "0.25", features = ["derive"] }
+strum_macros = "0.25"
+ouroboros = "0.17"
 
 [patch.crates-io]
 glium = { git = "https://github.com/introtochaosbook/glium.git", version = "0.32.1", branch = "cpl/read" }
