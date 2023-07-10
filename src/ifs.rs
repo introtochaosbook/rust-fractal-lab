@@ -7,10 +7,8 @@ use glium::glutin::ContextBuilder;
 use glium::index::{NoIndices, PrimitiveType};
 use glium::uniforms::{UniformValue, Uniforms};
 use glium::{implement_vertex, Display, DrawParameters, Program, Surface, VertexBuffer};
-use ndarray::{array, s, Array, Ix2};
+use ndarray::{s, Array, Ix2};
 use rand::distributions::{Distribution, WeightedIndex};
-use rand::prelude::ThreadRng;
-use rand::Rng;
 
 #[derive(Copy, Clone, Debug)]
 struct ColoredVertex {
