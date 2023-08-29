@@ -1,6 +1,6 @@
 # rust-fractal-lab
 
-This is the companion source code for the upcoming book *Introduction to Chaos, Fractals and Dynamical Systems*.
+This is the companion source code for the book *Introduction to Chaos, Fractals and Dynamical Systems*. You can buy the book at [Bookshop.org](https://bookshop.org/p/books/introduction-to-chaos-fractals-and-dynamical-systems-phillip-a-laplante/19716574?ean=9789811273902) or [Amazon](https://www.amazon.com/gp/aw/d/9811273901?psc=1&ref=ppx_pop_mob_b_asin_title).
 
 For usage instructions please scroll down to the bottom of the page.
 
